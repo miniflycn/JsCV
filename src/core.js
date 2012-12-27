@@ -782,7 +782,7 @@ var copyMakeBorder = function(__src, __top, __left, __bottom, __right, __borderT
 		error(arguments.callee, UNSPPORT_DATA_TYPE/* {line} */);
 	}
 	if(__borderType === CV_BORDER_CONSTANT){
-		return copyMakeConstBorder_8u(__src, __top, __left, __bottom, __right, __value);
+		return copyMakeConstBorder_8U(__src, __top, __left, __bottom, __right, __value);
 	}else{
 		return copyMakeBorder_8U(__src, __top, __left, __bottom, __right, __borderType);
 	}
@@ -790,7 +790,6 @@ var copyMakeBorder = function(__src, __top, __left, __bottom, __right, __borderT
 cv.copyMakeBorder = copyMakeBorder;
 //NOT CV_BORDER_CONSTANT
 function copyMakeBorder_8U(__src, __top, __left, __bottom, __right, __borderType){
-	(__src && __top) || error(arguments.callee, IS_UNDEFINED_OR_NULL/* {line} */);
 	var i, j;
 	var width = __src.col,
 		height = __src.row;
@@ -800,7 +799,7 @@ function copyMakeBorder_8U(__src, __top, __left, __bottom, __right, __borderType
 		bottom = __bottom || top,
 		dstWidth = width + left + right,
 		dstHeight = height + top + bottom,
-		borderType = borderType || CV_BORDER_REFLECT;
+		borderType = __borderType || CV_BORDER_REFLECT;
 	var buffer = new ArrayBuffer(dstHeight * dstWidth * 4),
 		tab = new Uint32Array(left + right);
 	
@@ -838,7 +837,7 @@ function copyMakeBorder_8U(__src, __top, __left, __bottom, __right, __borderType
 	return new Mat(dstHeight, dstWidth, CV_RGBA, new Uint8ClampedArray(buffer));
 }
 //CV_BORDER_CONSTANT
-function copyMakeConstBorder_8u(__src, __top, __left, __bottom, __right, __value){
+function copyMakeConstBorder_8U(__src, __top, __left, __bottom, __right, __value){
 	var i, j;
 	var width = __src.col,
 		height = __src.row;
@@ -1291,7 +1290,7 @@ var threshold = function(__src, __thresh, __maxVal, __thresholdType, __dst){
 		for(i = height; i--;){
 			for(j = width; j--;){
 				offset = (i * width + j) * 2;
-				dData[offset] = thresholdType(sData[offset], __thresh, __maxVal);
+				dData[offset] = threshouldType(sData[offset], __thresh, maxVal);
 				dData[offset + 1] = sData[offset + 1];
 			}
 		}
@@ -1483,6 +1482,7 @@ cv.Scharr = Scharr;
  *	Applies a generic geometrical transformation to an image.
  *	<b>Method</b>
  *	Mat remap(Mat src, Int32Array mapX, Int32Array mapY, Mat dst )
+ *	Mat remap(Mat src, Function mapX, Function mapY, Mat dst )
  *	<b>Parameters</b>
  *	src – input image.
  *	mapX – The first map of x values.
@@ -1550,7 +1550,62 @@ function remap4function(){
 	return dst;
 }
 
+/***********************************************
+ *	<h2>getRotationArray2D</h2>
+ *	Calculates the affine matrix of 2d rotation.
+ *	<b>Method</b>
+ *	Array getRotationArray2D(double angle)
+ *	<b>Parameters</b>
+ *	angle – The rotation angle in degrees.
+ *	x -
+ *	y -
+ */
+var getRotationArray2D = function(__angle, __x, __y){
+	var sin = Math.sin(__angle) || 0,
+		cos = Math.cos(__angle) || 1,
+		x = __x || 0,
+		y = __y || 0;
+	
+	return [cos, -sin, x,
+			cos, sin, y
+			];
+};
+cv.getRotationArray2D = getRotationArray2D;
+
+/***********************************************
+ *	<h2>warpAffine</h2>
+ *	Applies a generic geometrical transformation to an image.
+ *	<b>Method</b>
+ *	Mat warpAffine(Mat src, Array rotArray, Mat dst )
+ *	<b>Parameters</b>
+ *	src – input image.
+ *	rotArray - the transformation matrix.
+ *	dst – output Mat.
+ */
+var warpAffine = function(__src, __rotArray, __dst){
+	(__src && __rotArray) || error(arguments.callee, IS_UNDEFINED_OR_NULL/* {line} */);
+	if(__src.type && __src.type === "CV_RGBA"){
+		var height = __src.row,
+			width = __src.col,
+			dst = __dst || new Mat(height, width, CV_RGBA),
+			sData = new Uint32Array(__src.buffer),
+			dData = new Uint32Array(dst.buffer);
+		
+		var i, j;
+		
+		for(j = height; j--;)
+			for(i = width; i--;)
+				dData[(__rotArray[3] * i + __rotArray[4] * j + __rotArray[5]) * width + __rotArray[0] * i + __rotArray[1] * j + __rotArray[2]] = sData[j * width + i];
+	}else{
+		error(arguments.callee, UNSPPORT_DATA_TYPE/* {line} */);
+	}
+	return dst;
+};
+cv.warpAffine = warpAffine;
+
+
+
 host.cv = cv;
-//this.__cv20121221 = cv;
+this.__cv20121221 = cv;
 
 })(this);

@@ -782,7 +782,7 @@ var copyMakeBorder = function(__src, __top, __left, __bottom, __right, __borderT
 		error(arguments.callee, UNSPPORT_DATA_TYPE, 782);
 	}
 	if(__borderType === CV_BORDER_CONSTANT){
-		return copyMakeConstBorder_8u(__src, __top, __left, __bottom, __right, __value);
+		return copyMakeConstBorder_8U(__src, __top, __left, __bottom, __right, __value);
 	}else{
 		return copyMakeBorder_8U(__src, __top, __left, __bottom, __right, __borderType);
 	}
@@ -790,7 +790,6 @@ var copyMakeBorder = function(__src, __top, __left, __bottom, __right, __borderT
 cv.copyMakeBorder = copyMakeBorder;
 //NOT CV_BORDER_CONSTANT
 function copyMakeBorder_8U(__src, __top, __left, __bottom, __right, __borderType){
-	(__src && __top) || error(arguments.callee, IS_UNDEFINED_OR_NULL, 793);
 	var i, j;
 	var width = __src.col,
 		height = __src.row;
@@ -800,7 +799,7 @@ function copyMakeBorder_8U(__src, __top, __left, __bottom, __right, __borderType
 		bottom = __bottom || top,
 		dstWidth = width + left + right,
 		dstHeight = height + top + bottom,
-		borderType = borderType || CV_BORDER_REFLECT;
+		borderType = __borderType || CV_BORDER_REFLECT;
 	var buffer = new ArrayBuffer(dstHeight * dstWidth * 4),
 		tab = new Uint32Array(left + right);
 	
@@ -838,7 +837,7 @@ function copyMakeBorder_8U(__src, __top, __left, __bottom, __right, __borderType
 	return new Mat(dstHeight, dstWidth, CV_RGBA, new Uint8ClampedArray(buffer));
 }
 //CV_BORDER_CONSTANT
-function copyMakeConstBorder_8u(__src, __top, __left, __bottom, __right, __value){
+function copyMakeConstBorder_8U(__src, __top, __left, __bottom, __right, __value){
 	var i, j;
 	var width = __src.col,
 		height = __src.row;
@@ -899,7 +898,7 @@ function copyMakeConstBorder_8u(__src, __top, __left, __bottom, __right, __value
  *	dst – output image of the same size and type as src.
  */
 var blur = function(__src, __size1, __size2, __borderType, __dst){
-	__src || error(arguments.callee, IS_UNDEFINED_OR_NULL, 902);
+	__src || error(arguments.callee, IS_UNDEFINED_OR_NULL, 901);
 	if(__src.type && __src.type == "CV_RGBA"){
 		var height = __src.row,
 			width = __src.col,
@@ -909,7 +908,7 @@ var blur = function(__src, __size1, __size2, __borderType, __dst){
 			size2 = __size2 || size1,
 			size = size1 * size2;
 		if(size1 % 2 !== 1 || size2 % 2 !== 1){
-			error(arguments.callee, UNSPPORT_SIZE, 912);
+			error(arguments.callee, UNSPPORT_SIZE, 911);
 			return __src;
 		}
 		var startX = Math.floor(size1 / 2),
@@ -940,7 +939,7 @@ var blur = function(__src, __size1, __size2, __borderType, __dst){
 		}
 		
 	}else{
-		error(arguments.callee, UNSPPORT_DATA_TYPE, 943);
+		error(arguments.callee, UNSPPORT_DATA_TYPE, 942);
 	}
 	return dst;
 };
@@ -961,7 +960,7 @@ cv.blur = blur;
  *	dst – output image of the same size and type as src.
  */
 var GaussianBlur = function(__src, __size1, __size2, __sigma1, __sigma2, __borderType, __dst){
-	__src || error(arguments.callee, IS_UNDEFINED_OR_NULL, 964);
+	__src || error(arguments.callee, IS_UNDEFINED_OR_NULL, 963);
 	if(__src.type && __src.type == "CV_RGBA"){
 		var height = __src.row,
 			width = __src.col,
@@ -973,7 +972,7 @@ var GaussianBlur = function(__src, __size1, __size2, __sigma1, __sigma2, __borde
 			size2 = __size2 || Math.round(sigma2 * 6 + 1) | 1,
 			size = size1 * size2;
 		if(size1 % 2 !== 1 || size2 % 2 !== 1){
-			error(arguments.callee, UNSPPORT_SIZE, 976);
+			error(arguments.callee, UNSPPORT_SIZE, 975);
 			return __src;
 		}
 		var startX = Math.floor(size1 / 2),
@@ -1020,7 +1019,7 @@ var GaussianBlur = function(__src, __size1, __size2, __sigma1, __sigma2, __borde
 		}
 		
 	}else{
-		error(arguments.callee, UNSPPORT_DATA_TYPE, 1023);
+		error(arguments.callee, UNSPPORT_DATA_TYPE, 1022);
 	}
 	return dst;
 };
@@ -1082,7 +1081,7 @@ function getGaussianKernel(__n, __sigma){
  *	dst – output image of the same size and type as src.
  */
 var medianBlur = function(__src, __size1, __size2, __borderType, __dst){
-	__src || error(arguments.callee, IS_UNDEFINED_OR_NULL, 1085);
+	__src || error(arguments.callee, IS_UNDEFINED_OR_NULL, 1084);
 	if(__src.type && __src.type == "CV_RGBA"){
 		var height = __src.row,
 			width = __src.col,
@@ -1092,7 +1091,7 @@ var medianBlur = function(__src, __size1, __size2, __borderType, __dst){
 			size2 = __size2 || size1,
 			size = size1 * size2;
 		if(size1 % 2 !== 1 || size2 % 2 !== 1){
-			error(arguments.callee, UNSPPORT_SIZE, 1095);
+			error(arguments.callee, UNSPPORT_SIZE, 1094);
 			return __src;
 		}
 		var startX = Math.floor(size1 / 2),
@@ -1123,7 +1122,7 @@ var medianBlur = function(__src, __size1, __size2, __borderType, __dst){
 		}
 		
 	}else{
-		error(arguments.callee, UNSPPORT_DATA_TYPE, 1126);
+		error(arguments.callee, UNSPPORT_DATA_TYPE, 1125);
 	}
 	return dst;
 }; 
@@ -1154,7 +1153,7 @@ var bilateralFilter = function(__src, __size, __sigmaColor, __sigmaSpace, __bord
 		var __size = __size || Math.round(sigmaSpace * 6 + 1) | 1,
 			size = __size * __size;
 		if(__size % 2 !== 1){
-			error(arguments.callee, UNSPPORT_SIZE, 1157);
+			error(arguments.callee, UNSPPORT_SIZE, 1156);
 			return __src;
 		}
 		var start = Math.floor(__size / 2);
@@ -1199,7 +1198,7 @@ var bilateralFilter = function(__src, __size, __sigmaColor, __sigmaSpace, __bord
 		}
 		
 	}else{
-		error(arguments.callee, UNSPPORT_DATA_TYPE, 1202);
+		error(arguments.callee, UNSPPORT_DATA_TYPE, 1201);
 	}
 	return dst;
 };
@@ -1219,7 +1218,7 @@ var bilateralFilter = function(__src, __size, __sigmaColor, __sigmaSpace, __bord
  *	dst – output image of the same size and type as src.
  */
 var filter2D = function(__src, __depth, __kernel, __borderType, __dst){
-	(__src && __kernel) || error(arguments.callee, IS_UNDEFINED_OR_NULL, 1222);
+	(__src && __kernel) || error(arguments.callee, IS_UNDEFINED_OR_NULL, 1221);
 	var height = __src.row,
 		width = __src.col,
 		dst = __dst || new Mat(height, width, __depth || __src.depth()),
@@ -1231,7 +1230,7 @@ var filter2D = function(__src, __depth, __kernel, __borderType, __dst){
 		kData = __kernel.data;
 	
 	if(size1 % 2 !== 1 || size2 % 2 !== 1){
-		error(arguments.callee, UNSPPORT_SIZE, 1234);
+		error(arguments.callee, UNSPPORT_SIZE, 1233);
 		return __src;
 	}
 	
@@ -1276,7 +1275,7 @@ cv.filter2D = filter2D;
  *	dst – output image of the same size and type as src.
  */
 var threshold = function(__src, __thresh, __maxVal, __thresholdType, __dst){
-	(__src && __thresh) || error(arguments.callee, IS_UNDEFINED_OR_NULL, 1279);
+	(__src && __thresh) || error(arguments.callee, IS_UNDEFINED_OR_NULL, 1278);
 	if(__src.type && __src.type == "CV_GRAY"){
 		var width = __src.col,
 			height = __src.row,
@@ -1291,13 +1290,13 @@ var threshold = function(__src, __thresh, __maxVal, __thresholdType, __dst){
 		for(i = height; i--;){
 			for(j = width; j--;){
 				offset = (i * width + j) * 2;
-				dData[offset] = thresholdType(sData[offset], __thresh, __maxVal);
+				dData[offset] = threshouldType(sData[offset], __thresh, maxVal);
 				dData[offset + 1] = sData[offset + 1];
 			}
 		}
 		
 	}else{
-		error(arguments.callee, UNSPPORT_DATA_TYPE, 1300);
+		error(arguments.callee, UNSPPORT_DATA_TYPE, 1299);
 	}
 	
 	return dst;
@@ -1318,7 +1317,7 @@ cv.threshold = threshold;
  *	dst – output Mat.
  */
 var Sobel = function(__src, __xorder, __yorder, __size, __borderType, __dst){
-	(__src && (__xorder ^ __yorder)) || error(arguments.callee, IS_UNDEFINED_OR_NULL, 1321);
+	(__src && (__xorder ^ __yorder)) || error(arguments.callee, IS_UNDEFINED_OR_NULL, 1320);
 	if(__src.type && __src.type === "CV_RGBA"){
 		var kernel,
 			height = __src.row,
@@ -1342,14 +1341,14 @@ var Sobel = function(__src, __xorder, __yorder, __size, __borderType, __dst){
 				}
 				break;
 			default:
-				error(arguments.callee, UNSPPORT_SIZE, 1345);
+				error(arguments.callee, UNSPPORT_SIZE, 1344);
 			
 		}
 		
 		RGBA216IC2Filter(__src, size, height, width, channel, kernel, dstData, __borderType);
 
 	}else{
-		error(arguments.callee, UNSPPORT_DATA_TYPE, 1352);
+		error(arguments.callee, UNSPPORT_DATA_TYPE, 1351);
 	}
 	return dst;
 };
@@ -1397,7 +1396,7 @@ function RGBA216IC2Filter(__src, size, height, width, channel, kernel, dstData, 
  *	dst – output Mat.
  */
 var Laplacian = function(__src, __size, __borderType, __dst){
-	__src || error(arguments.callee, IS_UNDEFINED_OR_NULL, 1400);
+	__src || error(arguments.callee, IS_UNDEFINED_OR_NULL, 1399);
 	if(__src.type && __src.type === "CV_RGBA"){
 		var kernel,
 			height = __src.row,
@@ -1415,13 +1414,13 @@ var Laplacian = function(__src, __size, __borderType, __dst){
 				size = 3;
 				break;
 			default:
-				error(arguments.callee, UNSPPORT_SIZE, 1418);
+				error(arguments.callee, UNSPPORT_SIZE, 1417);
 			
 		}
 		
 		RGBA216IC2Filter(__src, size, height, width, channel, kernel, dstData, __borderType);
 	}else{
-		error(arguments.callee, UNSPPORT_DATA_TYPE, 1424);
+		error(arguments.callee, UNSPPORT_DATA_TYPE, 1423);
 	}
 	return dst;
 };
@@ -1441,7 +1440,7 @@ cv.Laplacian = Laplacian;
  *	dst – output Mat.
  */
 var Scharr = function(__src, __xorder, __yorder, __size, __borderType, __dst){
-	(__src && (__xorder ^ __yorder)) || error(arguments.callee, IS_UNDEFINED_OR_NULL, 1444);
+	(__src && (__xorder ^ __yorder)) || error(arguments.callee, IS_UNDEFINED_OR_NULL, 1443);
 	if(__src.type && __src.type === "CV_RGBA"){
 		var kernel,
 			height = __src.row,
@@ -1465,14 +1464,14 @@ var Scharr = function(__src, __xorder, __yorder, __size, __borderType, __dst){
 				}
 				break;
 			default:
-				error(arguments.callee, UNSPPORT_SIZE, 1468);
+				error(arguments.callee, UNSPPORT_SIZE, 1467);
 			
 		}
 		
 		RGBA216IC2Filter(__src, size, height, width, channel, kernel, dstData, __borderType);
 
 	}else{
-		error(arguments.callee, UNSPPORT_DATA_TYPE, 1475);
+		error(arguments.callee, UNSPPORT_DATA_TYPE, 1474);
 	}
 	return dst;
 };
@@ -1483,6 +1482,7 @@ cv.Scharr = Scharr;
  *	Applies a generic geometrical transformation to an image.
  *	<b>Method</b>
  *	Mat remap(Mat src, Int32Array mapX, Int32Array mapY, Mat dst )
+ *	Mat remap(Mat src, Function mapX, Function mapY, Mat dst )
  *	<b>Parameters</b>
  *	src – input image.
  *	mapX – The first map of x values.
@@ -1550,7 +1550,62 @@ function remap4function(){
 	return dst;
 }
 
+/***********************************************
+ *	<h2>getRotationArray2D</h2>
+ *	Calculates the affine matrix of 2d rotation.
+ *	<b>Method</b>
+ *	Array getRotationArray2D(double angle)
+ *	<b>Parameters</b>
+ *	angle – The rotation angle in degrees.
+ *	x -
+ *	y -
+ */
+var getRotationArray2D = function(__angle, __x, __y){
+	var sin = Math.sin(__angle) || 0,
+		cos = Math.cos(__angle) || 1,
+		x = __x || 0,
+		y = __y || 0;
+	
+	return [cos, -sin, x,
+			cos, sin, y
+			];
+};
+cv.getRotationArray2D = getRotationArray2D;
+
+/***********************************************
+ *	<h2>warpAffine</h2>
+ *	Applies a generic geometrical transformation to an image.
+ *	<b>Method</b>
+ *	Mat warpAffine(Mat src, Array rotArray, Mat dst )
+ *	<b>Parameters</b>
+ *	src – input image.
+ *	rotArray - the transformation matrix.
+ *	dst – output Mat.
+ */
+var warpAffine = function(__src, __rotArray, __dst){
+	(__src && __rotArray) || error(arguments.callee, IS_UNDEFINED_OR_NULL, 1586);
+	if(__src.type && __src.type === "CV_RGBA"){
+		var height = __src.row,
+			width = __src.col,
+			dst = __dst || new Mat(height, width, CV_RGBA),
+			sData = new Uint32Array(__src.buffer),
+			dData = new Uint32Array(dst.buffer);
+		
+		var i, j;
+		
+		for(j = height; j--;)
+			for(i = width; i--;)
+				dData[(__rotArray[3] * i + __rotArray[4] * j + __rotArray[5]) * width + __rotArray[0] * i + __rotArray[1] * j + __rotArray[2]] = sData[j * width + i];
+	}else{
+		error(arguments.callee, UNSPPORT_DATA_TYPE, 1600);
+	}
+	return dst;
+};
+cv.warpAffine = warpAffine;
+
+
+
 host.cv = cv;
-//this.__cv20121221 = cv;
+this.__cv20121221 = cv;
 
 })(this);
