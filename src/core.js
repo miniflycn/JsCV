@@ -1490,7 +1490,7 @@ cv.Scharr = Scharr;
  *	dst – output Mat.
  */
 var remap = function(__src, __mapX, __mapY, __dst){
-	(__src && __mapX && mapY) || error(arguments.callee, IS_UNDEFINED_OR_NULL/* {line} */);
+	(__src && __mapX && __mapY) || error(arguments.callee, IS_UNDEFINED_OR_NULL/* {line} */);
 	
 	if(__src.type !== "CV_RGBA")
 		error(arguments.callee, UNSPPORT_DATA_TYPE/* {line} */);
@@ -1528,7 +1528,7 @@ function remap4array(__src, __mapX, __mapY, __dst){
 	return dst;
 }
 //remap for function
-function remap4function(){
+function remap4function(__src, __mapX, __mapY, __dst){
 	var height = __src.row,
 		width = __src.col,
 		sData = __src.data,
@@ -1593,9 +1593,15 @@ var warpAffine = function(__src, __rotArray, __dst){
 		
 		var i, j;
 		
-		for(j = height; j--;)
-			for(i = width; i--;)
-				dData[(__rotArray[3] * i + __rotArray[4] * j + __rotArray[5]) * width + __rotArray[0] * i + __rotArray[1] * j + __rotArray[2]] = sData[j * width + i];
+		for(j = height; j--;){
+			for(i = width; i--;){
+				var y = Math.round(__rotArray[3] * i + __rotArray[4] * j + __rotArray[5]),
+					x = Math.round(__rotArray[0] * i + __rotArray[1] * j + __rotArray[2]);
+				if(y < height && x < width){
+					dData[j * width + i] = sData[y * width + x];
+				}
+			}
+		}
 	}else{
 		error(arguments.callee, UNSPPORT_DATA_TYPE/* {line} */);
 	}

@@ -1,0 +1,20 @@
+﻿<html>
+<head>
+	<title>Sample</title>	
+</head>
+<body>
+Please open the file as image.<br />
+请用图片查看器打开该文件。
+<script src="../../dst/core.js" type="text/javascript"></script>
+<script>
+var img = new Image();
+img.onload = function(){
+	var mat = cv.imread(img);
+	var mat2 = cv.convertScaleAbs(cv.Laplacian(mat));
+	var mat3 = cv.threshold(mat2, 8);
+	cv.imwrite(mat3);
+};
+img.src = "1.jpg";
+</script>
+</body>
+</html>
