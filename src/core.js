@@ -156,8 +156,8 @@ function log(__msg){
 	CV_LOG_ON && console.log("[JsCV_LOG] " + __msg);
 }
 
-function error(__line, __callee, __msg){
-	CV_ERROR_ON && console.dir(new CV_ERROR(__line, __callee, __msg));
+function error(__callee, __msg, __line){
+	CV_ERROR_ON && console.dir(new CV_ERROR(__callee, __msg, __line));
 }
 
 /***********************************************
