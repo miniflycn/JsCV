@@ -3,19 +3,28 @@
 	<title>Sample</title>	
 </head>
 <body>
-Please open the file as image.<br />
-请用图片查看器打开该文件。
+<img id = "img" title = "Before"/>
+<canvas id="demo" title = "After"></canvas>
 <script src="../../dst/core.js" type="text/javascript"></script>
 <script>
-var img = new Image();
+var img = document.getElementById("img");
 img.onload = function(){
 	var mat = cv.imread(img);
 	var mat2 = cv.convertScaleAbs(cv.Sobel(mat, 1, 0));
 	var mat3 = cv.convertScaleAbs(cv.Sobel(mat, 0, 1));
 	var mat4 = cv.addWeighted(mat2, 0.5, mat3, 0.5);
-	cv.imwrite(mat4);
+	show(mat4);
 };
 img.src = "1.jpg";
+
+var canvas = document.getElementById("demo"),
+	demo = canvas.getContext("2d");
+
+function show(__mat){
+	canvas.width = __mat.col;
+	canvas.height = __mat.row;
+	demo.putImageData(cv.RGBA2ImageData(__mat), 0, 0);
+}
 </script>
 </body>
 </html>

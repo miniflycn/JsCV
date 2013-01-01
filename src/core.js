@@ -33,8 +33,8 @@ function CV_RGBA(__row, __col, __data, __buffer){
 	this.type = "CV_RGBA";
 }
 function CV_GRAY(__row, __col, __data, __buffer){
-	this.channel = 2;
-	this.buffer = __buffer || new ArrayBuffer(__row * __col * 2);
+	this.channel = 1;
+	this.buffer = __buffer || new ArrayBuffer(__row * __col);
 	this.bytes = 1;
 	this.data = new Uint8ClampedArray(this.buffer);
 	__data && this.data.set(__data);
@@ -509,6 +509,19 @@ var imwrite = function(__imgMat, __flag){
 };
 cv.imwrite = imwrite;
 
+function RGBA2ImageData(__imgMat){
+	__imgMat || error(arguments.callee, IS_UNDEFINED_OR_NULL/* {line} */);
+	if(__imgMat.type === "CV_GRAY"){
+		__imgMat = cvtColor(__imgMat, CV_GRAY2RGBA);
+	}
+    var width = __imgMat.col,
+        height = __imgMat.row,
+        imageData = iCtx.createImageData(width, height);
+    imageData.data.set(__imgMat.data);
+    return imageData;
+}
+cv.RGBA2ImageData = RGBA2ImageData;
+
 /***********************************************
  *	<h2>convertScaleAbs</h2>
  *	Calculates the first, second, third, or mixed image derivatives using an extended Sobel operator.
@@ -526,7 +539,7 @@ function convertScaleAbs(__src, __dst){
 		sData = __src.data;
 		
 	if(!__dst){
-		if(channel === 2)
+		if(channel === 1)
 			dst = new Mat(height, width, CV_GRAY);
 		else if(channel === 4)
 			dst = new Mat(height, width, CV_RGBA);
@@ -623,58 +636,56 @@ var cvtColor = function(__src, __code){
 				var dst = new Mat(row, col, CV_GRAY),
 					data = dst.data,
 					data2 = __src.data;
-				var pix = row * col * 2;
+				var pix = row * col;
 				while (pix){
 					// 9798 / 32768 = 0.29901123046875
 					// 19235 / 32768 = 0.587005615234375
 					// 3736 / 32768 = 0.114013671875
-					data[pix -= 2] = (data2[2 * pix] * 9798 + data2[2 * pix + 1] * 19235 + data2[2 * pix + 2] * 3736) >> 15;
-					data[pix + 1] = data2[2 * pix + 3];
+					data[--pix] = (data2[4 * pix] * 9798 + data2[4 * pix + 1] * 19235 + data2[4 * pix + 2] * 3736) >> 15;
 				}
 				break;
 			case CV_RGBA2GRAY_DUFF:
 				var dst = new Mat(row, col, CV_GRAY),
 					data = dst.data,
 					data2 = __src.data;
-				var total = row * col * 2,
-					length = total >> 4,
+				var total = row * col,
+					length = total >> 3,
 					i = length,
 					rStartAt, gStartAt;
 				for(; i--;){
-					gStartAt = i << 4;
-					rStartAt = gStartAt << 1;
+					gStartAt = i << 3;
+					rStartAt = gStartAt << 2;
 					data[gStartAt] = (data2[rStartAt] * 9798 + data2[++rStartAt] * 19235 + data2[++rStartAt] * 3736) >> 15;
-					data[++gStartAt] = data2[++rStartAt];
+					rStartAt++;
 					data[++gStartAt] = (data2[++rStartAt] * 9798 + data2[++rStartAt] * 19235 + data2[++rStartAt] * 3736) >> 15;
-					data[++gStartAt] = data2[++rStartAt];
+					rStartAt++;
 					data[++gStartAt] = (data2[++rStartAt] * 9798 + data2[++rStartAt] * 19235 + data2[++rStartAt] * 3736) >> 15;
-					data[++gStartAt] = data2[++rStartAt];
+					rStartAt++;
 					data[++gStartAt] = (data2[++rStartAt] * 9798 + data2[++rStartAt] * 19235 + data2[++rStartAt] * 3736) >> 15;
-					data[++gStartAt] = data2[++rStartAt];
+					rStartAt++;
 					data[++gStartAt] = (data2[++rStartAt] * 9798 + data2[++rStartAt] * 19235 + data2[++rStartAt] * 3736) >> 15;
-					data[++gStartAt] = data2[++rStartAt];
+					rStartAt++;
 					data[++gStartAt] = (data2[++rStartAt] * 9798 + data2[++rStartAt] * 19235 + data2[++rStartAt] * 3736) >> 15;
-					data[++gStartAt] = data2[++rStartAt];
+					rStartAt++;
 					data[++gStartAt] = (data2[++rStartAt] * 9798 + data2[++rStartAt] * 19235 + data2[++rStartAt] * 3736) >> 15;
-					data[++gStartAt] = data2[++rStartAt];
+					rStartAt++;
 					data[++gStartAt] = (data2[++rStartAt] * 9798 + data2[++rStartAt] * 19235 + data2[++rStartAt] * 3736) >> 15;
-					data[++gStartAt] = data2[++rStartAt];
 				}
-				gStartAt = length << 4;
-				rStartAt = gStartAt << 1;
+				gStartAt = length << 3;
+				rStartAt = gStartAt << 2;
 				for(; gStartAt < total;){
 					data[gStartAt++] = (data2[rStartAt++] * 9798 + data2[rStartAt++] * 19235 + data2[rStartAt++] * 3736) >> 15;
-					data[gStartAt++] = data2[rStartAt++];
+					rStartAt++;
 				}
 				break;
 			case CV_GRAY2RGBA:
 				var dst = new Mat(row, col, CV_RGBA),
 					data = dst.data,
 					data2 = __src.data;
-				var pix1, pix2, pix3, pix = __src.row * __src.col * 4;
+				var pix1, pix2, pix3, pix = (__src.row * __src.col) << 2;
 				while (pix){
-					data[pix -= 4] = data[pix + 1] = data[pix + 2] = data2[pix / 2];
-					data[pix3 = pix + 3] = data2[pix / 2 + 1];
+					data[pix -= 4] = data[pix + 1] = data[pix + 2] = data2[pix >> 2];
+					data[pix3 = pix + 3] = 255;
 				}
 				break;
 		}
@@ -713,11 +724,11 @@ var brightnessContrast = function(__src, __brightness, __contrast){
 		
 		for(y = height; y--;){
 			for(x = width; x--;){
-				allValue += gData[(y * width + x) * 2];
+				allValue += gData[y * width + x];
 			}
 		}
 		
-		var r, g, b, offset, gAverage = Math.floor(allValue / (height * width));
+		var r, g, b, offset, gAverage = (allValue / (height * width)) | 0;
 		
 		for(y = height; y--;){
 			for(x = width; x--;){
@@ -1481,9 +1492,8 @@ var threshold = function(__src, __thresh, __maxVal, __thresholdType, __dst){
 		
 		for(i = height; i--;){
 			for(j = width; j--;){
-				offset = (i * width + j) * 2;
+				offset = i * width + j;
 				dData[offset] = threshouldType(sData[offset], __thresh, maxVal);
-				dData[offset + 1] = sData[offset + 1];
 			}
 		}
 		
@@ -1514,7 +1524,7 @@ var Sobel = function(__src, __xorder, __yorder, __size, __borderType, __dst){
 		var kernel,
 			height = __src.row,
 			width = __src.col,
-			dst = __dst || new Mat(height, width, CV_16I, 2),
+			dst = __dst || new Mat(height, width, CV_16I, 1),
 			dstData = dst.data,
 			size = __size || 3,
 			channel = dst.channel;
@@ -1564,7 +1574,7 @@ var Sobel = function(__src, __xorder, __yorder, __size, __borderType, __dst){
 	return dst;
 };
 cv.Sobel = Sobel;
-//CV_RGBA to CV_16IC2 filter
+//CV_RGBA to CV_16IC1 filter
 function RGBA216IC2Filter(__src, size, height, width, channel, kernel, dstData, __borderType){
 	var start = size >> 1;
 		
@@ -1582,15 +1592,13 @@ function RGBA216IC2Filter(__src, size, height, width, channel, kernel, dstData, 
 		for(j = width; j--;){
 			newValue = 0;
 			for(y = size; y--;){
-				offsetY = (y + i) * mWidth * 2;
+				offsetY = (y + i) * mWidth;
 				for(x = size; x--;){
-					nowX = (x + j) * 2;
+					nowX = x + j;
 					newValue += (mData[offsetY + nowX] * kernel[y * size + x]);
 				}
 			}
-			for(c = channel - 1; c--;)
-				dstData[(j + offsetI) * channel + c] = newValue;
-			dstData[(j + offsetI + 1) * channel - 1] = mData[offsetY + start * mWidth * 2 + (j + start) * 2 + 1];
+			dstData[j + offsetI] = newValue;
 		}
 	}
 }
@@ -1612,7 +1620,7 @@ var Laplacian = function(__src, __size, __borderType, __dst){
 		var kernel,
 			height = __src.row,
 			width = __src.col,
-			dst = __dst || new Mat(height, width, CV_16I, 2),
+			dst = __dst || new Mat(height, width, CV_16I, 1),
 			dstData = dst.data,
 			size = __size || 3,
 			channel = dst.channel;
@@ -1661,7 +1669,7 @@ var Scharr = function(__src, __xorder, __yorder, __borderType, __dst){
 		var kernel,
 			height = __src.row,
 			width = __src.col,
-			dst = __dst || new Mat(height, width, CV_16I, 2),
+			dst = __dst || new Mat(height, width, CV_16I, 1),
 			dstData = dst.data,
 			size = 3,
 			channel = dst.channel;
@@ -1727,8 +1735,8 @@ function remap4array(__src, __mapX, __mapY, __dst){
 	
 	for(j = height; j--;){
 		for(i = width; i--;){
-			offset = (j * width + i) * 4;
-			mapset = (__mapY[i][j] * width + __mapX[i][j]) * 4;
+			offset = (j * width + i) << 2;
+			mapset = (__mapY[i][j] * width + __mapX[i][j]) << 2;
 			dData[offset] = sData[mapset];
 			dData[offset + 1] = sData[mapset + 1];
 			dData[offset + 2] = sData[mapset + 2];
@@ -1749,8 +1757,8 @@ function remap4function(__src, __mapX, __mapY, __dst){
 	
 	for(j = height; j--;){
 		for(i = width; i--;){
-			offset = (j * width + i) * 4;
-			mapset = (__mapY(i, j) * width + __mapX(i, j)) * 4;
+			offset = (j * width + i) << 2;
+			mapset = (__mapY(i, j) * width + __mapX(i, j)) << 2;
 			dData[offset] = sData[mapset];
 			dData[offset + 1] = sData[mapset + 1];
 			dData[offset + 2] = sData[mapset + 2];
@@ -1957,7 +1965,7 @@ var dilate = function(__src, __size, __borderType, __dst){
 			dst = __dst || new Mat(height, width, CV_RGBA),
 			dstData = dst.data;
 		
-		var start = size >> 1 || 1;
+		var start = size >> 1;
 		var withBorderMat = copyMakeBorder(__src, start, start, 0, 0, __borderType),
 			mData = withBorderMat.data,
 			mWidth = withBorderMat.col;
@@ -2054,8 +2062,6 @@ var erode = function(__src, __size, __borderType, __dst){
 	return dst;
 };
 cv.erode = erode;
-
-
 
 host.cv = cv;
 this.__cv20121221 = cv;
