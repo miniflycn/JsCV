@@ -9,7 +9,7 @@
 <script>
 var img = document.getElementById("img");
 img.onload = function(){
-	var mat = cv.imread(img);
+	var mat = cv.cvtColor(cv.imread(img), CV_RGBA2GRAY);
 	var mat2 = cv.convertScaleAbs(cv.Scharr(mat, 1, 0));
 	var mat3 = cv.convertScaleAbs(cv.Scharr(mat, 0, 1));
 	var mat4 = cv.addWeighted(mat2, 0.5, mat3, 0.5);

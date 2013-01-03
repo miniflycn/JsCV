@@ -9,9 +9,9 @@
 <script>
 var img = document.getElementById("img");
 img.onload = function(){
-	var mat = cv.imread(img);
+	var mat = cv.cvtColor(cv.imread(img), CV_RGBA2GRAY);
 	var mat2 = cv.convertScaleAbs(cv.Laplacian(mat));
-	var mat3 = cv.threshold(mat2, 8);
+	var mat3 = cv.threshold(mat2, 25);
 	show(mat3);
 };
 img.src = "1.jpg";

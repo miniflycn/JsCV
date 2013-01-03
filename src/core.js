@@ -829,7 +829,7 @@ function borderInterpolate(__p, __len, __borderType){
  *	value – Border value if borderType==BORDER_CONSTANT .
  */
 var copyMakeBorder = function(__src, __top, __left, __bottom, __right, __borderType, __value){
-	if(__src.type != "CV_RGBA"){
+	if(__src.type !== "CV_RGBA" && __src.type !== "CV_GRAY"){
 		error(arguments.callee, UNSPPORT_DATA_TYPE/* {line} */);
 	}
 	if(__borderType === CV_BORDER_CONSTANT){
@@ -841,9 +841,10 @@ var copyMakeBorder = function(__src, __top, __left, __bottom, __right, __borderT
 cv.copyMakeBorder = copyMakeBorder;
 //NOT CV_BORDER_CONSTANT
 function copyMakeBorder_8U(__src, __top, __left, __bottom, __right, __borderType){
-	var i, j;
+	var i, j, k;
 	var width = __src.col,
-		height = __src.row;
+		height = __src.row,
+		channel = __src.channel;
 	var top = __top,
 		left = __left || __top,
 		right = __right || left,
@@ -858,47 +859,72 @@ function copyMakeBorder_8U(__src, __top, __left, __bottom, __right, __borderType
 		dstHeight = height + top + bottom,
 		borderType = __borderType || CV_BORDER_REFLECT;
 	
-	var buffer = new ArrayBuffer(dstHeight * dstWidth * 4),
+	var buffer = new ArrayBuffer(dstHeight * dstWidth * channel),
+		tab, TypedArray, c;
+	
+	if(false){	//This way is slower in FireFox 17.0.1.
 		tab = new Uint32Array(left + right);
-	
-	for(i = 0; i < left; i++){
-		tab[i] = borderInterpolate(i - left, width, borderType);
+		for(i = left; i--;){
+			tab[i] = borderInterpolate(i - left, width, borderType);
+		}
+		for(i = right; i--;){
+			tab[i + left] = borderInterpolate(width + i, width, borderType);
+		}
+		TypedArray = Uint32Array;
+		c = 1;
+	}else{
+		tab = new Uint32Array((left + right) * channel);
+		for(i = left; i--;){
+			j = borderInterpolate(i - left, width, borderType) * channel;
+			for(k = channel; k--;)
+				tab[i * channel + k] = j + k;
+		}
+		for(i = right; i--;){
+			j = borderInterpolate(width + i, width, borderType) * channel;
+			for(k = channel; k--;)
+				tab[(i + left) * channel + k] = j + k;
+		}
+		TypedArray = Uint8Array;
+		c = channel;
+		left *= c;
+		right *= c;
 	}
-	for(i = 0; i < right; i++){
-		tab[i + left] = borderInterpolate(width + i, width, borderType);
-	}
 	
-	var tempArray, data;
+	var tempArray, data,
+		dLen = dstWidth * c,
+		sLen = width * c;
 	
+	//Reading TypedArray sequentially is faster.
 	for(i = 0; i < height; i++){
-		tempArray = new Uint32Array(buffer, (i + top) * dstWidth * 4, dstWidth);
-		data = new Uint32Array(__src.buffer, i * width * 4, width);
+		tempArray = new TypedArray(buffer, (i + top) * dstWidth * channel, dLen);
+		data = new TypedArray(__src.buffer, i * width * channel, sLen);
 		for(j = 0; j < left; j++)
 			tempArray[j] = data[tab[j]];
 		for(j = 0; j < right; j++)
-			tempArray[j + width + left] = data[tab[j + left]];
+			tempArray[j + sLen + left] = data[tab[j + left]];
 		tempArray.set(data, left);
 	}
 	
-	var allArray = new Uint32Array(buffer);
+	var allArray = new TypedArray(buffer);
 	for(i = 0; i < top; i++){
 		j = borderInterpolate(i - top, height, borderType);
-		tempArray = new Uint32Array(buffer, i * dstWidth * 4, dstWidth);
-		tempArray.set(allArray.subarray((j + top) * dstWidth, (j + top + 1) * dstWidth));
+		tempArray = new TypedArray(buffer, i * dstWidth * channel, dLen);
+		tempArray.set(allArray.subarray((j + top) * dLen, (j + top + 1) * dLen));
 	}
 	for(i = 0; i < bottom; i++){
 		j = borderInterpolate(i + height, height, borderType);
-		tempArray = new Uint32Array(buffer, (i + top + height) * dstWidth * 4, dstWidth);
-		tempArray.set(allArray.subarray((j + top) * dstWidth, (j + top + 1) * dstWidth));
+		tempArray = new TypedArray(buffer, (i + top + height) * dstWidth * channel, dLen);
+		tempArray.set(allArray.subarray((j + top) * dLen, (j + top + 1) * dLen));
 	}
 	
-	return new Mat(dstHeight, dstWidth, CV_RGBA, new Uint8ClampedArray(buffer));
+	return new Mat(dstHeight, dstWidth, __src.depth(), null, buffer);
 }
 //CV_BORDER_CONSTANT
 function copyMakeConstBorder_8U(__src, __top, __left, __bottom, __right, __value){
 	var i, j;
 	var width = __src.col,
-		height = __src.row;
+		height = __src.row,
+		channel = __src.channel;
 	var top = __top,
 		left = __left || __top,
 		right = __right || left,
@@ -912,39 +938,53 @@ function copyMakeConstBorder_8U(__src, __top, __left, __bottom, __right, __value
 	var dstWidth = width + left + right,
 		dstHeight = height + top + bottom,
 		value = __value || [0, 0, 0, 255];
-	var constBuf = new ArrayBuffer(dstWidth * 4),
-		constArray = new Uint8ClampedArray(constBuf);
-		buffer = new ArrayBuffer(dstHeight * dstWidth * 4);
+	var constBuf = new ArrayBuffer(dstWidth * channel),
+		constArray = new Uint8Array(constBuf),
+		buffer = new ArrayBuffer(dstHeight * dstWidth * channel);
 	
 	for(i = 0; i < dstWidth; i++){
-		for( j = 0; j < 4; j++){
-			constArray[i * 4 + j] = value[j];
+		for( j = 0; j < channel; j++){
+			constArray[i * channel + j] = value[j];
 		}
 	}
 	
-	constArray = new Uint32Array(constBuf);
-	var tempArray;
+	var TypedArray, c;
+	
+	if(channel === 4){
+		TypedArray = Uint32Array;
+		c = 1;
+	}else{
+		TypedArray = Uint8Array;
+		c = channel;
+	}
+	
+	constArray = new TypedArray(constBuf);
+	var tempArray,
+		rLeft = c * left,
+		rRight = c * right,
+		sLen = c * width,
+		dLen = c * dstWidth;
 	
 	for(i = 0; i < height; i++){
-		tempArray = new Uint32Array(buffer, (i + top) * dstWidth * 4, left);
-		tempArray.set(constArray.subarray(0, left));
-		tempArray = new Uint32Array(buffer, ((i + top + 1) * dstWidth - right) * 4, right);
-		tempArray.set(constArray.subarray(0, right));
-		tempArray = new Uint32Array(buffer, ((i + top) * dstWidth + left) * 4, width);
-		tempArray.set(new Uint32Array(__src.buffer, i * width * 4, width));
+		tempArray = new TypedArray(buffer, (i + top) * dstWidth * channel, rLeft);
+		tempArray.set(constArray.subarray(0, rLeft));
+		tempArray = new TypedArray(buffer, ((i + top + 1) * dstWidth - right) * channel, rRight);
+		tempArray.set(constArray.subarray(0, rRight));
+		tempArray = new TypedArray(buffer, ((i + top) * dstWidth + left) * channel, sLen);
+		tempArray.set(new TypedArray(__src.buffer, i * width * channel, sLen));
 	}
 	
 	for(i = 0; i < top; i++){
-		tempArray = new Uint32Array(buffer, i * dstWidth * 4, dstWidth);
+		tempArray = new TypedArray(buffer, i * dstWidth * channel, dLen);
 		tempArray.set(constArray);
 	}
 	
 	for(i = 0; i < bottom; i++){
-		tempArray = new Uint32Array(buffer, (i + top + height) * dstWidth * 4, dstWidth);
+		tempArray = new TypedArray(buffer, (i + top + height) * dstWidth * channel, dLen);
 		tempArray.set(constArray);
 	}
 	
-	return new Mat(dstHeight, dstWidth, CV_RGBA, new Uint8ClampedArray(buffer));
+	return new Mat(dstHeight, dstWidth, __src.depth(), null, buffer);
 }
 
 /***********************************************
@@ -1110,8 +1150,7 @@ var GaussianBlur = function(__src, __size1, __size2, __sigma1, __sigma2, __borde
 			mWidth = withBorderMat.col;
 			
 		var kernel1 = getGaussianKernel(size1, sigma1),
-			kernel2, 
-			kernel = new Array(size1 * size2);
+			kernel2;
 		
 		if(size1 === size2 && sigma1 === sigma2)
 			kernel2 = kernel1;
@@ -1306,6 +1345,8 @@ var medianBlur = function(__src, __size1, __size2, __borderType, __dst){
 		var newValue = [], nowX, offsetY, offsetI;
 		var i, j, c, y, x;
 		
+		var median = (size >> 1) + 1; 
+		
 		for(i = height; i--;){
 			offsetI = i * width;
 			for(j = width; j--;){
@@ -1318,7 +1359,7 @@ var medianBlur = function(__src, __size1, __size2, __borderType, __dst){
 						}
 					}
 					newValue.sort();
-					dstData[(j + offsetI) * 4 + c] = newValue[Math.round(size / 2)];
+					dstData[(j + offsetI) * 4 + c] = newValue[median];
 				}
 				dstData[(j + offsetI) * 4 + 3] = mData[offsetY + startY * mWidth * 4 + (j + startX) * 4 + 3];
 			}
@@ -1520,14 +1561,14 @@ cv.threshold = threshold;
  */
 var Sobel = function(__src, __xorder, __yorder, __size, __borderType, __dst){
 	(__src && (__xorder ^ __yorder)) || error(arguments.callee, IS_UNDEFINED_OR_NULL/* {line} */);
-	if(__src.type && __src.type === "CV_RGBA"){
-		var kernel,
+	if(__src.type && __src.type === "CV_GRAY"){
+		var kernel1,
+			kernel2,
 			height = __src.row,
 			width = __src.col,
 			dst = __dst || new Mat(height, width, CV_16I, 1),
-			dstData = dst.data,
-			size = __size || 3,
-			channel = dst.channel;
+			dstData = dst.data
+			size = __size || 3;
 		switch(size){
 			case 1:
 				size = 3;
@@ -1566,7 +1607,7 @@ var Sobel = function(__src, __xorder, __yorder, __size, __borderType, __dst){
 			
 		}
 		
-		RGBA216IC2Filter(__src, size, height, width, channel, kernel, dstData, __borderType);
+		GRAY216IC1Filter(__src, size, height, width, kernel, dstData, __borderType);
 
 	}else{
 		error(arguments.callee, UNSPPORT_DATA_TYPE/* {line} */);
@@ -1574,12 +1615,12 @@ var Sobel = function(__src, __xorder, __yorder, __size, __borderType, __dst){
 	return dst;
 };
 cv.Sobel = Sobel;
-//CV_RGBA to CV_16IC1 filter
-function RGBA216IC2Filter(__src, size, height, width, channel, kernel, dstData, __borderType){
+
+//CV_GRAY to CV_16IC1 filter
+function GRAY216IC1Filter(__src, size, height, width, kernel, dstData, __borderType){
 	var start = size >> 1;
 		
 	var withBorderMat = copyMakeBorder(__src, start, start, 0, 0, __borderType);
-	withBorderMat = cvtColor(withBorderMat, CV_RGBA2GRAY);
 			
 	var mData = withBorderMat.data,
 		mWidth = withBorderMat.col;
@@ -1616,14 +1657,13 @@ function RGBA216IC2Filter(__src, size, height, width, channel, kernel, dstData, 
  */
 var Laplacian = function(__src, __size, __borderType, __dst){
 	__src || error(arguments.callee, IS_UNDEFINED_OR_NULL/* {line} */);
-	if(__src.type && __src.type === "CV_RGBA"){
+	if(__src.type && __src.type === "CV_GRAY"){
 		var kernel,
 			height = __src.row,
 			width = __src.col,
 			dst = __dst || new Mat(height, width, CV_16I, 1),
 			dstData = dst.data,
-			size = __size || 3,
-			channel = dst.channel;
+			size = __size || 3;
 		switch(size){
 			case 1:
 				kernel = [0,  1, 0,
@@ -1643,7 +1683,7 @@ var Laplacian = function(__src, __size, __borderType, __dst){
 			
 		}
 		
-		RGBA216IC2Filter(__src, size, height, width, channel, kernel, dstData, __borderType);
+		GRAY216IC1Filter(__src, size, height, width, kernel, dstData, __borderType);
 	}else{
 		error(arguments.callee, UNSPPORT_DATA_TYPE/* {line} */);
 	}
@@ -1665,14 +1705,13 @@ cv.Laplacian = Laplacian;
  */
 var Scharr = function(__src, __xorder, __yorder, __borderType, __dst){
 	(__src && (__xorder ^ __yorder)) || error(arguments.callee, IS_UNDEFINED_OR_NULL/* {line} */);
-	if(__src.type && __src.type === "CV_RGBA"){
+	if(__src.type && __src.type === "CV_GRAY"){
 		var kernel,
 			height = __src.row,
 			width = __src.col,
 			dst = __dst || new Mat(height, width, CV_16I, 1),
 			dstData = dst.data,
-			size = 3,
-			channel = dst.channel;
+			size = 3;
 			
 		if(__xorder){
 			kernel = [ -3, 0,  3,
@@ -1686,7 +1725,7 @@ var Scharr = function(__src, __xorder, __yorder, __borderType, __dst){
 					 ];
 		}
 		
-		RGBA216IC2Filter(__src, size, height, width, channel, kernel, dstData, __borderType);
+		GRAY216IC1Filter(__src, size, height, width, kernel, dstData, __borderType);
 
 	}else{
 		error(arguments.callee, UNSPPORT_DATA_TYPE/* {line} */);
