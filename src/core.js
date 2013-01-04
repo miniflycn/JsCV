@@ -1010,8 +1010,7 @@ var blur = function(__src, __size1, __size2, __borderType, __dst){
 			dst = __dst || new Mat(height, width, CV_RGBA),
 			dstData = dst.data;
 		var size1 = __size1 || 3,
-			size2 = __size2 || size1,
-			size = size1 * size2;
+			size2 = __size2 || size1;
 		if(size1 & 1 === 0 || size2 & 1 === 0){
 			error(arguments.callee, UNSPPORT_SIZE/* {line} */);
 			return __src;
@@ -1137,8 +1136,7 @@ var GaussianBlur = function(__src, __size1, __size2, __sigma1, __sigma2, __borde
 		var sigma1 = __sigma1 || 0,
 			sigma2 = __sigma2 || __sigma1;
 		var size1 = __size1 || Math.round(sigma1 * 6 + 1) | 1,
-			size2 = __size2 || Math.round(sigma2 * 6 + 1) | 1,
-			size = size1 * size2;
+			size2 = __size2 || Math.round(sigma2 * 6 + 1) | 1;
 		if(size1 & 1 === 0 || size2 & 1 === 0){
 			error(arguments.callee, UNSPPORT_SIZE/* {line} */);
 			return __src;
@@ -1508,6 +1506,81 @@ var filter2D = function(__src, __depth, __kernel, __borderType, __dst){
 cv.filter2D = filter2D;
 
 /***********************************************
+ *	<h2>filter2D</h2>
+ *	Blurs an image using a separable linear filter.
+ *	<b>Method</b>
+ *	Mat separableLinearFilter(Mat src, Function ddepth, Array rowKernel, Array colKernel, int borderType=CV_BORDER_REFLECT, Mat dst )
+ *	<b>Parameters</b>
+ *	src – input image.
+ *	ddepth –desired depth of the destination image; if it is negative, it will be the same as src.depth().
+ *	rowKernel – Coefficients for filtering each row, a single-channel floating point Array; if you want to apply different kernels to different channels, split the image into separate color planes using split() and process them individually.
+ *	colKernel – Coefficients for filtering each col.
+ *	borderType – Border type. When borderType==CV_BORDER_CONSTANT , the function always returns -1, regardless of p and len .
+ *	dst – output image of the same size and type as src.
+ */
+var separableLinearFilter = function(__src, __depth, __rowKernel, __colKernel, __borderType, __dst){
+	(__src && __rowKernel && __colKernel) || error(arguments.callee, IS_UNDEFINED_OR_NULL/* {line} */);
+	var height = __src.row,
+		width = __src.col,
+		dst = __dst || new Mat(height, width, __depth || __src.depth()),
+		dstData = dst.data,
+		sData = __src.data,
+		channel = __src.channel;
+	var size1 = __rowKernel.length,
+		size2 = __colKernel.length;
+	
+	if(size1 & 1 === 0 || size2 & 1 === 0){
+		error(arguments.callee, UNSPPORT_SIZE/* {line} */);
+		return __src;
+	}
+	
+	var startX = size1 >> 1,
+		startY = size2 >> 1;
+	var withBorderMat = copyMakeBorder(__src, -1, startX, 0, 0, __borderType),
+		mData = withBorderMat.data,
+		mWidth = withBorderMat.col;
+		
+	var i, j, c, y, x;
+		
+	var newValue, offset, offsetI;
+		
+	for(i = height; i--;){
+		offsetI = i * width;
+		for(j = width; j--;){
+			for(c = 3; c--;){
+				newValue = 0;
+				for(x = size1; x--;){
+					offset = i * mWidth * 4 + (x + j) * 4 + c;
+					newValue += (mData[offset] * __rowKernel[x]);
+				}
+				dstData[(j + offsetI) * 4 + c] = newValue;
+			}
+			dstData[(j + offsetI) * 4 + 3] = mData[(i + startY) * mWidth * 4 + (j + startX) * 4 + 3];
+		}
+	}
+		
+	withBorderMat = copyMakeBorder(dst, startY, -1, 0, 0, __borderType);
+	mData = withBorderMat.data;
+	mWidth = withBorderMat.col;
+		
+	for(i = height; i--;){
+		offsetI = i * width;
+		for(j = width; j--;){
+			for(c = 3; c--;){
+				newValue = 0;
+				for(y = size2; y--;){
+					offset = (y + i) * mWidth * 4 + j * 4 + c;
+					newValue += (mData[offset] * __colKernel[y]);
+				}
+				dstData[(j + offsetI) * 4 + c] = newValue;
+			}
+		}
+	}
+
+};
+cv.separableLinearFilter = separableLinearFilter;
+
+/***********************************************
  *	<h2>threshold</h2>
  *	Applies a fixed-level threshold to each array element.
  *	<b>Method</b>
@@ -1848,14 +1921,21 @@ var warpAffine = function(__src, __rotArray, __dst){
 			sData = new Uint32Array(__src.buffer),
 			dData = new Uint32Array(dst.buffer);
 		
-		var i, j;
+		var i, j, xs, ys, x, y, nowPix;
 		
-		for(j = height; j--;){
-			for(i = width; i--;){
-				var y = Math.round(__rotArray[3] * i + __rotArray[4] * j + __rotArray[5]),
-					x = Math.round(__rotArray[0] * i + __rotArray[1] * j + __rotArray[2]);
-				if(y < height && x < width){
-					dData[j * width + i] = sData[y * width + x];
+		for(j = 0, nowPix = 0; j < height; j++){
+			xs = __rotArray[1] * j + __rotArray[2];
+			ys = __rotArray[4] * j + __rotArray[5];
+			for(i = 0; i < width; i++, nowPix++, xs += __rotArray[0], ys += __rotArray[3]){
+				
+				if(xs > 0 && ys > 0 && xs < width && ys < height){
+					
+					y = (__rotArray[3] * i + __rotArray[4] * j + __rotArray[5]) | 0;
+					x = (__rotArray[0] * i + __rotArray[1] * j + __rotArray[2]) | 0;
+					
+					dData[nowPix] = sData[y * width + x];
+				}else{
+					dData[nowPix] = 4278190080;	//Black
 				}
 			}
 		}
@@ -2005,7 +2085,7 @@ var dilate = function(__src, __size, __borderType, __dst){
 			dstData = dst.data;
 		
 		var start = size >> 1;
-		var withBorderMat = copyMakeBorder(__src, start, start, 0, 0, __borderType),
+		var withBorderMat = copyMakeBorder(__src, -1, start, 0, 0, __borderType),
 			mData = withBorderMat.data,
 			mWidth = withBorderMat.col;
 		
@@ -2021,13 +2101,30 @@ var dilate = function(__src, __size, __borderType, __dst){
 			for(j = width; j--;){
 				newOffset = 0;
 				total = 0;
+				offsetY = i * mWidth * 4;
+				for(x = size; x--;){
+					nowOffset = offsetY + (x + j) * 4;
+					(mData[nowOffset] + mData[nowOffset + 1] + mData[nowOffset + 2] > total) && (total = mData[nowOffset] + mData[nowOffset + 1] + mData[nowOffset + 2]) && (newOffset = nowOffset);
+				}
+				dstData[(j + offsetI) * 4] = mData[newOffset];
+				dstData[(j + offsetI) * 4 + 1] = mData[newOffset + 1];
+				dstData[(j + offsetI) * 4 + 2] = mData[newOffset + 2];
+				dstData[(j + offsetI) * 4 + 3] = mData[newOffset + 3];
+			}
+		}
+		
+		withBorderMat = copyMakeBorder(dst, start, -1, 0, 0, __borderType);
+		mData = withBorderMat.data;
+		mWidth = withBorderMat.col;
+		
+		for(i = height; i--;){
+			offsetI = i * width;
+			for(j = width; j--;){
+				newOffset = 0;
+				total = 0;
 				for(y = size; y--;){
-					offsetY = (y + i) * mWidth * 4;
-					for(x = size; x--;){
-						nowX = (x + j) * 4;
-						nowOffset = offsetY + nowX;
-						(mData[nowOffset] + mData[nowOffset + 1] + mData[nowOffset + 2] > total) && (total = mData[nowOffset] + mData[nowOffset + 1] + mData[nowOffset + 2]) && (newOffset = nowOffset);
-					}
+					nowOffset = (y + i) * mWidth * 4 + j * 4;
+					(mData[nowOffset] + mData[nowOffset + 1] + mData[nowOffset + 2] > total) && (total = mData[nowOffset] + mData[nowOffset + 1] + mData[nowOffset + 2]) && (newOffset = nowOffset);
 				}
 				dstData[(j + offsetI) * 4] = mData[newOffset];
 				dstData[(j + offsetI) * 4 + 1] = mData[newOffset + 1];
@@ -2064,7 +2161,7 @@ var erode = function(__src, __size, __borderType, __dst){
 			dstData = dst.data;
 		
 		var start = size >> 1;
-		var withBorderMat = copyMakeBorder(__src, start, start, 0, 0, __borderType),
+		var withBorderMat = copyMakeBorder(__src, -1, start, 0, 0, __borderType),
 			mData = withBorderMat.data,
 			mWidth = withBorderMat.col;
 		
@@ -2080,13 +2177,30 @@ var erode = function(__src, __size, __borderType, __dst){
 			for(j = width; j--;){
 				newOffset = 0;
 				total = 765;
+				offsetY = i * mWidth * 4;
+				for(x = size; x--;){
+					nowOffset = offsetY + (x + j) * 4;
+					(mData[nowOffset] + mData[nowOffset + 1] + mData[nowOffset + 2] < total) && ((total = mData[nowOffset] + mData[nowOffset + 1] + mData[nowOffset + 2]) || true) && (newOffset = nowOffset);
+				}
+				dstData[(j + offsetI) * 4] = mData[newOffset];
+				dstData[(j + offsetI) * 4 + 1] = mData[newOffset + 1];
+				dstData[(j + offsetI) * 4 + 2] = mData[newOffset + 2];
+				dstData[(j + offsetI) * 4 + 3] = mData[newOffset + 3];
+			}
+		}
+		
+		withBorderMat = copyMakeBorder(dst, start, -1, 0, 0, __borderType);
+		mData = withBorderMat.data;
+		mWidth = withBorderMat.col;
+		
+		for(i = height; i--;){
+			offsetI = i * width;
+			for(j = width; j--;){
+				newOffset = 0;
+				total = 765;
 				for(y = size; y--;){
-					offsetY = (y + i) * mWidth * 4;
-					for(x = size; x--;){
-						nowX = (x + j) * 4;
-						nowOffset = offsetY + nowX;
-						(mData[nowOffset] + mData[nowOffset + 1] + mData[nowOffset + 2] < total) && (total = mData[nowOffset] + mData[nowOffset + 1] + mData[nowOffset + 2]) && (newOffset = nowOffset);
-					}
+					nowOffset = (y + i) * mWidth * 4 + j * 4;
+					(mData[nowOffset] + mData[nowOffset + 1] + mData[nowOffset + 2] < total) && ((total = mData[nowOffset] + mData[nowOffset + 1] + mData[nowOffset + 2]) || true) && (newOffset = nowOffset);
 				}
 				dstData[(j + offsetI) * 4] = mData[newOffset];
 				dstData[(j + offsetI) * 4 + 1] = mData[newOffset + 1];
@@ -2101,6 +2215,7 @@ var erode = function(__src, __size, __borderType, __dst){
 	return dst;
 };
 cv.erode = erode;
+
 
 host.cv = cv;
 this.__cv20121221 = cv;
