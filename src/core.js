@@ -1282,7 +1282,7 @@ function getGaussianKernel(__n, __sigma){
 							[0.03125, 0.109375, 0.21875, 0.28125, 0.21875, 0.109375, 0.03125]
 		];
 		
-	var fixedKernel = __n & 2 == 1 && __n <= SMALL_GAUSSIAN_SIZE && __sigma <= 0 ? smallGaussianTab[__n >> 1] : 0;
+	var fixedKernel = __n & 1 == 1 && __n <= SMALL_GAUSSIAN_SIZE && __sigma <= 0 ? smallGaussianTab[__n >> 1] : 0;
 	
 	var sigmaX = __sigma > 0 ? __sigma : ((__n - 1) * 0.5 - 1) * 0.3 + 0.8,
 		scale2X = -0.5 / (sigmaX * sigmaX),
