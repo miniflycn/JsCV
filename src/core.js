@@ -531,7 +531,7 @@ cv.RGBA2ImageData = RGBA2ImageData;
  *	src – input image.
  *	dst – output Mat.
  */
-function convertScaleAbs(__src, __dst){
+var convertScaleAbs = function(__src, __dst){
 	__src || error(arguments.callee, IS_UNDEFINED_OR_NULL/* {line} */);
 	var height = __src.row,
 		width = __src.col,

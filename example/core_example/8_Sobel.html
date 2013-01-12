@@ -10,8 +10,8 @@
 var img = document.getElementById("img");
 img.onload = function(){
 	var mat = cv.cvtColor(cv.imread(img), CV_RGBA2GRAY);
-	var mat2 = cv.convertScaleAbs(cv.Sobel2(mat, 1, 0));
-	var mat3 = cv.convertScaleAbs(cv.Sobel2(mat, 0, 1));
+	var mat2 = cv.convertScaleAbs(cv.Sobel(mat, 1, 0));
+	var mat3 = cv.convertScaleAbs(cv.Sobel(mat, 0, 1));
 	var mat4 = cv.addWeighted(mat2, 0.5, mat3, 0.5);
 	show(mat4);
 };
