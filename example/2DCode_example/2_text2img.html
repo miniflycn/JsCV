@@ -1,0 +1,35 @@
+﻿<html>
+<head>
+	<title>Sample</title>	
+</head>
+<body>
+<script src="../../dst/core.js" type="text/javascript"></script>
+<script>
+function string2Code(__string){
+	var result = [];
+	for(var i = __string.length; i--;){
+		result.push(__string.charCodeAt(i));
+	}
+	return result;
+}
+
+function code2String(__array){
+	var result = [];
+	for(var i = __array.length; i--;){
+		result.push(String.fromCharCode(__array[i]));
+	}
+	return result.join("");
+}
+
+
+var array = string2Code("hello world!");
+
+var mat = new cv.Mat(1, array.length, CV_GRAY, array);
+
+var mat2 = cv.cvtColor(mat, CV_GRAY2RGBA);
+
+cv.imwrite(mat2);
+
+</script>
+</body>
+</html>

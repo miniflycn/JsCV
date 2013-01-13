@@ -1356,7 +1356,7 @@ var medianBlur = function(__src, __size1, __size2, __borderType, __dst){
 							newValue[y * size1 + x] = mData[offsetY + nowX];
 						}
 					}
-					newValue.sort();
+					newValue.sort(function(a, b){return a - b;});
 					dstData[(j + offsetI) * 4 + c] = newValue[median];
 				}
 				dstData[(j + offsetI) * 4 + 3] = mData[offsetY + startY * mWidth * 4 + (j + startX) * 4 + 3];

@@ -1,0 +1,32 @@
+﻿<html>
+<head>
+	<title>Sample</title>	
+</head>
+<body>
+<script src="../../dst/core.js" type="text/javascript"></script>
+<script>
+function string2Code(__string){
+	var result = [];
+	for(var i = __string.length; i--;){
+		result.push(__string.charCodeAt(i));
+	}
+	return result;
+}
+
+function code2String(__array){
+	var result = [];
+	for(var i = __array.length; i--;){
+		result.push(String.fromCharCode(__array[i]));
+	}
+	return result.join("");
+}
+
+var img = document.createElement("img");
+img.onload = function(){
+	var mat = cv.cvtColor(cv.imread(img), CV_RGBA2GRAY);
+	alert(code2String(mat.data));
+};
+img.src = "hello_world.png";
+</script>
+</body>
+</html>
