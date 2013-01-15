@@ -1896,8 +1896,8 @@ var getRotationArray2D = function(__angle, __x, __y){
 		x = __x || 0,
 		y = __y || 0;
 	
-	return [cos, -sin, x,
-			cos, sin, y
+	return [cos, -sin, -x,
+			sin, cos, -y
 			];
 };
 cv.getRotationArray2D = getRotationArray2D;
@@ -1926,12 +1926,12 @@ var warpAffine = function(__src, __rotArray, __dst){
 		for(j = 0, nowPix = 0; j < height; j++){
 			xs = __rotArray[1] * j + __rotArray[2];
 			ys = __rotArray[4] * j + __rotArray[5];
+			
 			for(i = 0; i < width; i++, nowPix++, xs += __rotArray[0], ys += __rotArray[3]){
-				
 				if(xs > 0 && ys > 0 && xs < width && ys < height){
 					
-					y = (__rotArray[3] * i + __rotArray[4] * j + __rotArray[5]) | 0;
-					x = (__rotArray[0] * i + __rotArray[1] * j + __rotArray[2]) | 0;
+					y = ys | 0;
+					x = xs | 0;
 					
 					dData[nowPix] = sData[y * width + x];
 				}else{

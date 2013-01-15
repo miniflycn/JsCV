@@ -10,7 +10,7 @@
 var img = document.getElementById("img");
 img.onload = function(){
 	var mat = cv.imread(img);
-	var mat2 = cv.warpAffine(mat, cv.getRotationArray2D(1));
+	var mat2 = cv.warpAffine(mat, cv.getRotationArray2D(1, -400, 100));
 	show(mat2);
 };
 img.src = "1.jpg";
