@@ -800,7 +800,7 @@ function borderInterpolate(__p, __len, __borderType){
 				break;
 			case CV_BORDER_WRAP:
 				if(__p < 0)
-					__p -= ((__p - __len + 1) / __len) * __len;
+					__p -= (((__p - __len + 1) / __len) | 0) * __len;
 				if(__p >= __len)
 					__p %= __len;
 				break;
