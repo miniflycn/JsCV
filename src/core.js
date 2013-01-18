@@ -132,12 +132,11 @@ function iResize(__width, __height){
 
 var JsCV_MODULE = "CORE",
 	JsCV_MODULE_VERSION = "0.2";
-
 /***********************************************
  *	<h2>JsCV LOG System</h2>
  */
-var JsCV_ERROR_ON = console && true,
-	JsCV_LOG_ON = console && true;
+var JsCV_ERROR_ON = __host.console && true,
+	JsCV_LOG_ON = __host.console && true;
 	
 var UNSPPORT_DATA_TYPE = "Unknown/unsupported data type.",
 	UNSPPORT_BORDER_TYPE = "Unknown/unsupported border type.",
@@ -156,10 +155,37 @@ function JsCV_ERROR(__callee, __msg, __line){
 function log(__msg){
 	JsCV_LOG_ON && console.log("[JsCV_LOG] " + __msg);
 }
+cv.log = log;
 
 function error(__callee, __msg, __line){
 	JsCV_ERROR_ON && console.dir(new JsCV_ERROR(__callee, __msg, __line));
 }
+cv.error = error;
+
+/***********************************************
+ *	<h2>extend</h2>
+ *	Extend the cv object.
+ *	<b>Method</b>
+ *	Object extend(Object options)
+ *	<b>Parameters</b>
+ *	options – 
+ */
+var extend = function(__options) {
+	__options || error(arguments.callee, IS_UNDEFINED_OR_NULL/* {line} */);
+	var target = this,
+		name = null;
+	
+	for(name in __options){
+		if(!target[name]){
+			target[name] = __options[name];
+		}else{
+			log("cv." + name + " is already existed!");
+		}
+	}
+	
+	return target;
+};
+cv.extend = extend;
 
 /***********************************************
  *	<h2>Mat</h2>

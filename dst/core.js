@@ -132,12 +132,11 @@ function iResize(__width, __height){
 
 var JsCV_MODULE = "CORE",
 	JsCV_MODULE_VERSION = "0.2";
-
 /***********************************************
  *	<h2>JsCV LOG System</h2>
  */
-var JsCV_ERROR_ON = console && true,
-	JsCV_LOG_ON = console && true;
+var JsCV_ERROR_ON = __host.console && true,
+	JsCV_LOG_ON = __host.console && true;
 	
 var UNSPPORT_DATA_TYPE = "Unknown/unsupported data type.",
 	UNSPPORT_BORDER_TYPE = "Unknown/unsupported border type.",
@@ -156,10 +155,37 @@ function JsCV_ERROR(__callee, __msg, __line){
 function log(__msg){
 	JsCV_LOG_ON && console.log("[JsCV_LOG] " + __msg);
 }
+cv.log = log;
 
 function error(__callee, __msg, __line){
 	JsCV_ERROR_ON && console.dir(new JsCV_ERROR(__callee, __msg, __line));
 }
+cv.error = error;
+
+/***********************************************
+ *	<h2>extend</h2>
+ *	Extend the cv object.
+ *	<b>Method</b>
+ *	Object extend(Object options)
+ *	<b>Parameters</b>
+ *	options – 
+ */
+var extend = function(__options) {
+	__options || error(arguments.callee, IS_UNDEFINED_OR_NULL, 174);
+	var target = this,
+		name = null;
+	
+	for(name in __options){
+		if(!target[name]){
+			target[name] = __options[name];
+		}else{
+			log("cv." + name + " is already existed!");
+		}
+	}
+	
+	return target;
+};
+cv.extend = extend;
 
 /***********************************************
  *	<h2>Mat</h2>
@@ -177,11 +203,11 @@ function error(__callee, __msg, __line){
  *	buffer - An ArrayBuffer.
  */
 var Mat = function(__row, __col, __type, __channel, __buffer){
-	this.row = __row || error(arguments.callee, IS_UNDEFINED_OR_NULL, 180);
-	this.col = __col || error(arguments.callee, IS_UNDEFINED_OR_NULL, 181);
+	this.row = __row || error(arguments.callee, IS_UNDEFINED_OR_NULL, 206);
+	this.col = __col || error(arguments.callee, IS_UNDEFINED_OR_NULL, 207);
 	this.channel = __channel;
-	__type ? __type.call(this, __row, __col, __channel, __buffer) : error(arguments.callee, UNSPPORT_DATA_TYPE, 183);
-	this.data.length === this.row * this.col * this.channel || error(arguments.callee, MAT_SIZE_ERROR, 184);
+	__type ? __type.call(this, __row, __col, __channel, __buffer) : error(arguments.callee, UNSPPORT_DATA_TYPE, 209);
+	this.data.length === this.row * this.col * this.channel || error(arguments.callee, MAT_SIZE_ERROR, 210);
 };
 cv.Mat = Mat;
 /***********************************************
@@ -390,7 +416,7 @@ Mat.prototype.convertTo = function(__type, __dst){
  *	j – Index along the dimension 1.
  */
 Mat.prototype.at = function(__type, __x, __y){
-	var type = __type || error(arguments.callee, IS_UNDEFINED_OR_NULL, 393);
+	var type = __type || error(arguments.callee, IS_UNDEFINED_OR_NULL, 419);
 	var x = __x || 0,
 		y = __y || 0,
 		rowLen = this.col * this.channel * this.bytes,
@@ -435,7 +461,7 @@ Mat.prototype.at = function(__type, __x, __y){
 			return new Float64Array(this.buffer, (y * rowLen + x * 8), len);
 			break;
 		default:
-			error(arguments.callee, UNSPPORT_DATA_TYPE, 438);
+			error(arguments.callee, UNSPPORT_DATA_TYPE, 464);
 	}
 
 };
@@ -451,7 +477,7 @@ Mat.prototype.at = function(__type, __x, __y){
  */
 var Rect = function(__array, __channel){
 	this.data = __array || [];
-	this.channel = __channel || error(arguments.callee, IS_UNDEFINED_OR_NULL, 454);
+	this.channel = __channel || error(arguments.callee, IS_UNDEFINED_OR_NULL, 480);
 };
 cv.Rect = Rect;
 
@@ -464,7 +490,7 @@ cv.Rect = Rect;
  *	in - The input Image.
  */
 var imread = function(__image){
-	__image || error(arguments.callee, IS_UNDEFINED_OR_NULL, 467);
+	__image || error(arguments.callee, IS_UNDEFINED_OR_NULL, 493);
 	var width = __image.width,
 		height = __image.height;
 	iResize(width, height);
@@ -487,7 +513,7 @@ cv.imread = imread;
  *	flag - if output the image or just show the image.
  */
 var imwrite = function(__imgMat, __flag){
-	__imgMat || error(arguments.callee, IS_UNDEFINED_OR_NULL, 490);
+	__imgMat || error(arguments.callee, IS_UNDEFINED_OR_NULL, 516);
 	if(__imgMat.type === "CV_GRAY"){
 		__imgMat = cvtColor(__imgMat, CV_GRAY2RGBA);
 	}
@@ -503,14 +529,14 @@ var imwrite = function(__imgMat, __flag){
 		location.href = __flag ? data.replace("image/png", "image/octet-stream") : data;
 		return true;
 	}else{
-		error(arguments.callee, UNSPPORT_DATA_TYPE, 506);
+		error(arguments.callee, UNSPPORT_DATA_TYPE, 532);
 		return false;
 	}
 };
 cv.imwrite = imwrite;
 
 function RGBA2ImageData(__imgMat){
-	__imgMat || error(arguments.callee, IS_UNDEFINED_OR_NULL, 513);
+	__imgMat || error(arguments.callee, IS_UNDEFINED_OR_NULL, 539);
 	if(__imgMat.type === "CV_GRAY"){
 		__imgMat = cvtColor(__imgMat, CV_GRAY2RGBA);
 	}
@@ -532,7 +558,7 @@ cv.RGBA2ImageData = RGBA2ImageData;
  *	dst – output Mat.
  */
 var convertScaleAbs = function(__src, __dst){
-	__src || error(arguments.callee, IS_UNDEFINED_OR_NULL, 535);
+	__src || error(arguments.callee, IS_UNDEFINED_OR_NULL, 561);
 	var height = __src.row,
 		width = __src.col,
 		channel = __src.channel,
@@ -577,7 +603,7 @@ cv.convertScaleAbs = convertScaleAbs;
  *	dst – output Mat.
  */
 var addWeighted = function(__src1, __alpha, __src2, __beta, __gamma, __dst){
-	(__src1 && __src2) || error(arguments.callee, IS_UNDEFINED_OR_NULL, 580);
+	(__src1 && __src2) || error(arguments.callee, IS_UNDEFINED_OR_NULL, 606);
 	var height = __src1.row,
 		width = __src1.col,
 		alpha = __alpha || 0,
@@ -585,7 +611,7 @@ var addWeighted = function(__src1, __alpha, __src2, __beta, __gamma, __dst){
 		channel = __src1.channel,
 		gamma = __gamma || 0;
 	if(height !== __src2.row || width !== __src2.col || channel !== __src2.channel){
-		error(arguments.callee, "Src2 must be the same size and channel number as src1!", 588);
+		error(arguments.callee, "Src2 must be the same size and channel number as src1!", 614);
 		return null;
 	}
 	
@@ -627,7 +653,7 @@ cv.addWeighted = addWeighted;
  *		Gray to RGB[A]: R <- Y, G <- Y, B <- Y, A <- 255
  */
 var cvtColor = function(__src, __code){
-	__src || error(arguments.callee, IS_UNDEFINED_OR_NULL, 630);
+	__src || error(arguments.callee, IS_UNDEFINED_OR_NULL, 656);
 	if(__src.type && __src.type.indexOf("CV_") > -1){
 		var row = __src.row,
 			col = __src.col;
@@ -690,7 +716,7 @@ var cvtColor = function(__src, __code){
 				break;
 		}
 	}else{
-		error(arguments.callee, UNSPPORT_DATA_TYPE, 693);
+		error(arguments.callee, UNSPPORT_DATA_TYPE, 719);
 	}
 	return dst;
 };
@@ -707,7 +733,7 @@ cv.cvtColor = cvtColor;
  *	contrast – contrast control value, it should be range in [-255, 255];
  */
 var brightnessContrast = function(__src, __brightness, __contrast){
-	__src || error(arguments.callee, IS_UNDEFINED_OR_NULL, 710);
+	__src || error(arguments.callee, IS_UNDEFINED_OR_NULL, 736);
 	if(__src.type === "CV_RGBA"){
 		var sData = __src.data,
 			width = __src.col,
@@ -755,7 +781,7 @@ var brightnessContrast = function(__src, __brightness, __contrast){
 			}
 		}
 	}else{
-		error(arguments.callee, UNSPPORT_DATA_TYPE, 758);
+		error(arguments.callee, UNSPPORT_DATA_TYPE, 784);
 	}
 	return dst;
 };
@@ -807,7 +833,7 @@ function borderInterpolate(__p, __len, __borderType){
 			case CV_BORDER_CONSTANT:
 				__p = -1;
 			default:
-				error(arguments.callee, UNSPPORT_BORDER_TYPE, 810);
+				error(arguments.callee, UNSPPORT_BORDER_TYPE, 836);
 		}
 	}
 	return __p;
@@ -830,7 +856,7 @@ function borderInterpolate(__p, __len, __borderType){
  */
 var copyMakeBorder = function(__src, __top, __left, __bottom, __right, __borderType, __value){
 	if(__src.type !== "CV_RGBA" && __src.type !== "CV_GRAY"){
-		error(arguments.callee, UNSPPORT_DATA_TYPE, 833);
+		error(arguments.callee, UNSPPORT_DATA_TYPE, 859);
 	}
 	if(__borderType === CV_BORDER_CONSTANT){
 		return copyMakeConstBorder_8U(__src, __top, __left, __bottom, __right, __value);
@@ -1003,7 +1029,7 @@ function copyMakeConstBorder_8U(__src, __top, __left, __bottom, __right, __value
  */
 
 var blur = function(__src, __size1, __size2, __borderType, __dst){
-	__src || error(arguments.callee, IS_UNDEFINED_OR_NULL, 1006);
+	__src || error(arguments.callee, IS_UNDEFINED_OR_NULL, 1032);
 	if(__src.type && __src.type == "CV_RGBA"){
 		var height = __src.row,
 			width = __src.col,
@@ -1012,7 +1038,7 @@ var blur = function(__src, __size1, __size2, __borderType, __dst){
 		var size1 = __size1 || 3,
 			size2 = __size2 || size1;
 		if(size1 & 1 === 0 || size2 & 1 === 0){
-			error(arguments.callee, UNSPPORT_SIZE, 1015);
+			error(arguments.callee, UNSPPORT_SIZE, 1041);
 			return __src;
 		}
 		var startX = size1 >> 1,
@@ -1058,14 +1084,14 @@ var blur = function(__src, __size1, __size2, __borderType, __dst){
 		}
 		
 	}else{
-		error(arguments.callee, UNSPPORT_DATA_TYPE, 1061);
+		error(arguments.callee, UNSPPORT_DATA_TYPE, 1087);
 	}
 	return dst;
 };
 cv.blur = blur;
 //old verision
 var blurOld = function(__src, __size1, __size2, __borderType, __dst){
-	__src || error(arguments.callee, IS_UNDEFINED_OR_NULL, 1068);
+	__src || error(arguments.callee, IS_UNDEFINED_OR_NULL, 1094);
 	if(__src.type && __src.type == "CV_RGBA"){
 		var height = __src.row,
 			width = __src.col,
@@ -1075,7 +1101,7 @@ var blurOld = function(__src, __size1, __size2, __borderType, __dst){
 			size2 = __size2 || size1,
 			size = size1 * size2;
 		if(size1 & 1 === 0 || size2 & 1 === 0){
-			error(arguments.callee, UNSPPORT_SIZE, 1078);
+			error(arguments.callee, UNSPPORT_SIZE, 1104);
 			return __src;
 		}
 		var startX = size1 >> 1,
@@ -1106,7 +1132,7 @@ var blurOld = function(__src, __size1, __size2, __borderType, __dst){
 		}
 		
 	}else{
-		error(arguments.callee, UNSPPORT_DATA_TYPE, 1109);
+		error(arguments.callee, UNSPPORT_DATA_TYPE, 1135);
 	}
 	return dst;
 };
@@ -1127,7 +1153,7 @@ cv.blurOld = blurOld;
  *	dst – output image of the same size and type as src.
  */
 var GaussianBlur = function(__src, __size1, __size2, __sigma1, __sigma2, __borderType, __dst){
-	__src || error(arguments.callee, IS_UNDEFINED_OR_NULL, 1130);
+	__src || error(arguments.callee, IS_UNDEFINED_OR_NULL, 1156);
 	if(__src.type && __src.type == "CV_RGBA"){
 		var height = __src.row,
 			width = __src.col,
@@ -1138,7 +1164,7 @@ var GaussianBlur = function(__src, __size1, __size2, __sigma1, __sigma2, __borde
 		var size1 = __size1 || Math.round(sigma1 * 6 + 1) | 1,
 			size2 = __size2 || Math.round(sigma2 * 6 + 1) | 1;
 		if(size1 & 1 === 0 || size2 & 1 === 0){
-			error(arguments.callee, UNSPPORT_SIZE, 1141);
+			error(arguments.callee, UNSPPORT_SIZE, 1167);
 			return __src;
 		}
 		var startX = size1 >> 1,
@@ -1193,14 +1219,14 @@ var GaussianBlur = function(__src, __size1, __size2, __sigma1, __sigma2, __borde
 		}
 		
 	}else{
-		error(arguments.callee, UNSPPORT_DATA_TYPE, 1196);
+		error(arguments.callee, UNSPPORT_DATA_TYPE, 1222);
 	}
 	return dst;
 };
 cv.GaussianBlur = GaussianBlur;
 //old verision
 var GaussianBlurOld = function(__src, __size1, __size2, __sigma1, __sigma2, __borderType, __dst){
-	__src || error(arguments.callee, IS_UNDEFINED_OR_NULL, 1203);
+	__src || error(arguments.callee, IS_UNDEFINED_OR_NULL, 1229);
 	if(__src.type && __src.type == "CV_RGBA"){
 		var height = __src.row,
 			width = __src.col,
@@ -1212,7 +1238,7 @@ var GaussianBlurOld = function(__src, __size1, __size2, __sigma1, __sigma2, __bo
 			size2 = __size2 || Math.round(sigma2 * 6 + 1) | 1,
 			size = size1 * size2;
 		if(size1 & 1 === 0 || size2 & 1 === 0){
-			error(arguments.callee, UNSPPORT_SIZE, 1215);
+			error(arguments.callee, UNSPPORT_SIZE, 1241);
 			return __src;
 		}
 		var startX = size1 >> 1,
@@ -1259,7 +1285,7 @@ var GaussianBlurOld = function(__src, __size1, __size2, __sigma1, __sigma2, __bo
 		}
 		
 	}else{
-		error(arguments.callee, UNSPPORT_DATA_TYPE, 1262);
+		error(arguments.callee, UNSPPORT_DATA_TYPE, 1288);
 	}
 	return dst;
 };
@@ -1321,7 +1347,7 @@ function getGaussianKernel(__n, __sigma){
  *	dst – output image of the same size and type as src.
  */
 var medianBlur = function(__src, __size1, __size2, __borderType, __dst){
-	__src || error(arguments.callee, IS_UNDEFINED_OR_NULL, 1324);
+	__src || error(arguments.callee, IS_UNDEFINED_OR_NULL, 1350);
 	if(__src.type && __src.type == "CV_RGBA"){
 		var height = __src.row,
 			width = __src.col,
@@ -1331,7 +1357,7 @@ var medianBlur = function(__src, __size1, __size2, __borderType, __dst){
 			size2 = __size2 || size1,
 			size = size1 * size2;
 		if(size1 & 1 === 0 || size2 & 1 === 0){
-			error(arguments.callee, UNSPPORT_SIZE, 1334);
+			error(arguments.callee, UNSPPORT_SIZE, 1360);
 			return __src;
 		}
 		var startX = size1 >> 1,
@@ -1364,7 +1390,7 @@ var medianBlur = function(__src, __size1, __size2, __borderType, __dst){
 		}
 		
 	}else{
-		error(arguments.callee, UNSPPORT_DATA_TYPE, 1367);
+		error(arguments.callee, UNSPPORT_DATA_TYPE, 1393);
 	}
 	return dst;
 }; 
@@ -1395,7 +1421,7 @@ var bilateralFilter = function(__src, __size, __sigmaColor, __sigmaSpace, __bord
 		var __size = __size || Math.round(sigmaSpace * 6 + 1) | 1,
 			size = __size * __size;
 		if(__size & 1  === 0){
-			error(arguments.callee, UNSPPORT_SIZE, 1398);
+			error(arguments.callee, UNSPPORT_SIZE, 1424);
 			return __src;
 		}
 		var start = __size >> 1;
@@ -1440,7 +1466,7 @@ var bilateralFilter = function(__src, __size, __sigmaColor, __sigmaSpace, __bord
 		}
 		
 	}else{
-		error(arguments.callee, UNSPPORT_DATA_TYPE, 1443);
+		error(arguments.callee, UNSPPORT_DATA_TYPE, 1469);
 	}
 	return dst;
 };
@@ -1460,7 +1486,7 @@ var bilateralFilter = function(__src, __size, __sigmaColor, __sigmaSpace, __bord
  *	dst – output image of the same size and type as src.
  */
 var filter2D = function(__src, __depth, __kernel, __borderType, __dst){
-	(__src && __kernel) || error(arguments.callee, IS_UNDEFINED_OR_NULL, 1463);
+	(__src && __kernel) || error(arguments.callee, IS_UNDEFINED_OR_NULL, 1489);
 	var height = __src.row,
 		width = __src.col,
 		dst = __dst || new Mat(height, width, __depth || __src.depth()),
@@ -1472,7 +1498,7 @@ var filter2D = function(__src, __depth, __kernel, __borderType, __dst){
 		kData = __kernel.data;
 	
 	if(size1 & 1 === 0 || size2 & 1 === 0){
-		error(arguments.callee, UNSPPORT_SIZE, 1475);
+		error(arguments.callee, UNSPPORT_SIZE, 1501);
 		return __src;
 	}
 	
@@ -1519,7 +1545,7 @@ cv.filter2D = filter2D;
  *	dst – output image of the same size and type as src.
  */
 var separableLinearFilter = function(__src, __depth, __rowKernel, __colKernel, __borderType, __dst){
-	(__src && __rowKernel && __colKernel) || error(arguments.callee, IS_UNDEFINED_OR_NULL, 1522);
+	(__src && __rowKernel && __colKernel) || error(arguments.callee, IS_UNDEFINED_OR_NULL, 1548);
 	var height = __src.row,
 		width = __src.col,
 		dst = __dst || new Mat(height, width, __depth || __src.depth()),
@@ -1530,7 +1556,7 @@ var separableLinearFilter = function(__src, __depth, __rowKernel, __colKernel, _
 		size2 = __colKernel.length;
 	
 	if(size1 & 1 === 0 || size2 & 1 === 0){
-		error(arguments.callee, UNSPPORT_SIZE, 1533);
+		error(arguments.callee, UNSPPORT_SIZE, 1559);
 		return __src;
 	}
 	
@@ -1592,7 +1618,7 @@ cv.separableLinearFilter = separableLinearFilter;
  *	dst – output image of the same size and type as src.
  */
 var threshold = function(__src, __thresh, __maxVal, __thresholdType, __dst){
-	(__src && __thresh) || error(arguments.callee, IS_UNDEFINED_OR_NULL, 1595);
+	(__src && __thresh) || error(arguments.callee, IS_UNDEFINED_OR_NULL, 1621);
 	if(__src.type && __src.type == "CV_GRAY"){
 		var width = __src.col,
 			height = __src.row,
@@ -1612,7 +1638,7 @@ var threshold = function(__src, __thresh, __maxVal, __thresholdType, __dst){
 		}
 		
 	}else{
-		error(arguments.callee, UNSPPORT_DATA_TYPE, 1615);
+		error(arguments.callee, UNSPPORT_DATA_TYPE, 1641);
 	}
 	
 	return dst;
@@ -1633,7 +1659,7 @@ cv.threshold = threshold;
  *	dst – output Mat.
  */
 var Sobel = function(__src, __xorder, __yorder, __size, __borderType, __dst){
-	(__src && (__xorder ^ __yorder)) || error(arguments.callee, IS_UNDEFINED_OR_NULL, 1636);
+	(__src && (__xorder ^ __yorder)) || error(arguments.callee, IS_UNDEFINED_OR_NULL, 1662);
 	if(__src.type && __src.type === "CV_GRAY"){
 		var kernel1,
 			kernel2,
@@ -1676,14 +1702,14 @@ var Sobel = function(__src, __xorder, __yorder, __size, __borderType, __dst){
 				}
 				break;
 			default:
-				error(arguments.callee, UNSPPORT_SIZE, 1679);
+				error(arguments.callee, UNSPPORT_SIZE, 1705);
 			
 		}
 		
 		GRAY216IC1Filter(__src, size, height, width, kernel, dstData, __borderType);
 
 	}else{
-		error(arguments.callee, UNSPPORT_DATA_TYPE, 1686);
+		error(arguments.callee, UNSPPORT_DATA_TYPE, 1712);
 	}
 	return dst;
 };
@@ -1729,7 +1755,7 @@ function GRAY216IC1Filter(__src, size, height, width, kernel, dstData, __borderT
  *	dst – output Mat.
  */
 var Laplacian = function(__src, __size, __borderType, __dst){
-	__src || error(arguments.callee, IS_UNDEFINED_OR_NULL, 1732);
+	__src || error(arguments.callee, IS_UNDEFINED_OR_NULL, 1758);
 	if(__src.type && __src.type === "CV_GRAY"){
 		var kernel,
 			height = __src.row,
@@ -1752,13 +1778,13 @@ var Laplacian = function(__src, __size, __borderType, __dst){
 						 ];
 				break;
 			default:
-				error(arguments.callee, UNSPPORT_SIZE, 1755);
+				error(arguments.callee, UNSPPORT_SIZE, 1781);
 			
 		}
 		
 		GRAY216IC1Filter(__src, size, height, width, kernel, dstData, __borderType);
 	}else{
-		error(arguments.callee, UNSPPORT_DATA_TYPE, 1761);
+		error(arguments.callee, UNSPPORT_DATA_TYPE, 1787);
 	}
 	return dst;
 };
@@ -1777,7 +1803,7 @@ cv.Laplacian = Laplacian;
  *	dst – output Mat.
  */
 var Scharr = function(__src, __xorder, __yorder, __borderType, __dst){
-	(__src && (__xorder ^ __yorder)) || error(arguments.callee, IS_UNDEFINED_OR_NULL, 1780);
+	(__src && (__xorder ^ __yorder)) || error(arguments.callee, IS_UNDEFINED_OR_NULL, 1806);
 	if(__src.type && __src.type === "CV_GRAY"){
 		var kernel,
 			height = __src.row,
@@ -1801,7 +1827,7 @@ var Scharr = function(__src, __xorder, __yorder, __borderType, __dst){
 		GRAY216IC1Filter(__src, size, height, width, kernel, dstData, __borderType);
 
 	}else{
-		error(arguments.callee, UNSPPORT_DATA_TYPE, 1804);
+		error(arguments.callee, UNSPPORT_DATA_TYPE, 1830);
 	}
 	return dst;
 };
@@ -1820,17 +1846,17 @@ cv.Scharr = Scharr;
  *	dst – output Mat.
  */
 var remap = function(__src, __mapX, __mapY, __dst){
-	(__src && __mapX && __mapY) || error(arguments.callee, IS_UNDEFINED_OR_NULL, 1823);
+	(__src && __mapX && __mapY) || error(arguments.callee, IS_UNDEFINED_OR_NULL, 1849);
 	
 	if(__src.type !== "CV_RGBA")
-		error(arguments.callee, UNSPPORT_DATA_TYPE, 1826);
+		error(arguments.callee, UNSPPORT_DATA_TYPE, 1852);
 	
 	if(typeof __mapX === "function" && typeof __mapY === "function"){
 		return remap4function(__src, __mapX, __mapY, __dst);
 	}else if(__mapX instanceof Int32Arrray || __mapY instanceof Int32Array){
 		return remap4array(__src, __mapX, __mapY, __dst);
 	}else{
-		error(arguments.callee, UNSPPORT_DATA_TYPE, 1833);
+		error(arguments.callee, UNSPPORT_DATA_TYPE, 1859);
 		return __dst || __src;
 	}
 };
@@ -1913,7 +1939,7 @@ cv.getRotationArray2D = getRotationArray2D;
  *	dst – output Mat.
  */
 var warpAffine = function(__src, __rotArray, __dst){
-	(__src && __rotArray) || error(arguments.callee, IS_UNDEFINED_OR_NULL, 1916);
+	(__src && __rotArray) || error(arguments.callee, IS_UNDEFINED_OR_NULL, 1942);
 	if(__src.type && __src.type === "CV_RGBA"){
 		var height = __src.row,
 			width = __src.col,
@@ -1940,7 +1966,7 @@ var warpAffine = function(__src, __rotArray, __dst){
 			}
 		}
 	}else{
-		error(arguments.callee, UNSPPORT_DATA_TYPE, 1943);
+		error(arguments.callee, UNSPPORT_DATA_TYPE, 1969);
 	}
 	return dst;
 };
@@ -1956,7 +1982,7 @@ cv.warpAffine = warpAffine;
  *	dst – output Mat.
  */
 var pyrDown = function(__src, __dst){
-	__src || error(arguments.callee, IS_UNDEFINED_OR_NULL, 1959);
+	__src || error(arguments.callee, IS_UNDEFINED_OR_NULL, 1985);
 	if(__src.type && __src.type == "CV_RGBA"){
 		var width = __src.col,
 			height = __src.row,
@@ -1998,7 +2024,7 @@ var pyrDown = function(__src, __dst){
 		}
 		
 	}else{
-		error(arguments.callee, UNSPPORT_DATA_TYPE, 2001);
+		error(arguments.callee, UNSPPORT_DATA_TYPE, 2027);
 	}
 	
 	return dst;
@@ -2015,7 +2041,7 @@ cv.pyrDown = pyrDown;
  *	dst – output Mat.
  */
 var pyrUp = function(__src, __dst){
-	__src || error(arguments.callee, IS_UNDEFINED_OR_NULL, 2018);
+	__src || error(arguments.callee, IS_UNDEFINED_OR_NULL, 2044);
 	if(__src.type && __src.type == "CV_RGBA"){
 		var width = __src.col,
 			height = __src.row,
@@ -2057,7 +2083,7 @@ var pyrUp = function(__src, __dst){
 		}
 		
 	}else{
-		error(arguments.callee, UNSPPORT_DATA_TYPE, 2060);
+		error(arguments.callee, UNSPPORT_DATA_TYPE, 2086);
 	}
 	
 	return dst;
@@ -2076,7 +2102,7 @@ cv.pyrUp = pyrUp;
  *	dst – output Mat.
  */
 var dilate = function(__src, __size, __borderType, __dst){
-	__src || error(arguments.callee, IS_UNDEFINED_OR_NULL, 2079);
+	__src || error(arguments.callee, IS_UNDEFINED_OR_NULL, 2105);
 	if(__src.type && __src.type == "CV_RGBA"){
 		var width = __src.col,
 			height = __src.row,
@@ -2092,7 +2118,7 @@ var dilate = function(__src, __size, __borderType, __dst){
 		var newOffset, total, nowX, offsetY, offsetI, nowOffset, i, j;
 		
 		if(size & 1 === 0){
-			error(arguments.callee, UNSPPORT_SIZE, 2095);
+			error(arguments.callee, UNSPPORT_SIZE, 2121);
 			return __src;
 		}
 		
@@ -2134,7 +2160,7 @@ var dilate = function(__src, __size, __borderType, __dst){
 		}
 		
 	}else{
-		error(arguments.callee, UNSPPORT_DATA_TYPE, 2137);
+		error(arguments.callee, UNSPPORT_DATA_TYPE, 2163);
 	}
 	return dst;
 };
@@ -2152,7 +2178,7 @@ cv.dilate = dilate;
  *	dst – output Mat.
  */
 var erode = function(__src, __size, __borderType, __dst){
-	__src || error(arguments.callee, IS_UNDEFINED_OR_NULL, 2155);
+	__src || error(arguments.callee, IS_UNDEFINED_OR_NULL, 2181);
 	if(__src.type && __src.type == "CV_RGBA"){
 		var width = __src.col,
 			height = __src.row,
@@ -2168,7 +2194,7 @@ var erode = function(__src, __size, __borderType, __dst){
 		var newOffset, total, nowX, offsetY, offsetI, nowOffset, i, j;
 		
 		if(size & 1 === 0){
-			error(arguments.callee, UNSPPORT_SIZE, 2171);
+			error(arguments.callee, UNSPPORT_SIZE, 2197);
 			return __src;
 		}
 		
@@ -2210,7 +2236,7 @@ var erode = function(__src, __size, __borderType, __dst){
 		}
 		
 	}else{
-		error(arguments.callee, UNSPPORT_DATA_TYPE, 2213);
+		error(arguments.callee, UNSPPORT_DATA_TYPE, 2239);
 	}
 	return dst;
 };
