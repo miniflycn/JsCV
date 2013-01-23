@@ -8,7 +8,6 @@ var version = "0.1a",
 var expando = "asThread" + ( version + Math.random() ).replace( /\D/g, "" ),
 	cache = {},
 	length = 0,
-	now = 0,
 	setImm = null,
 	firing = false,
 	callbacks = [],
@@ -60,13 +59,15 @@ function fire(){
 }
 
 function __Thread(__name){
-	this.name = cache[__name] = __name;
+	if(__name){
+		this.name = cache[__name] = __name
+		length++;
+	}
 	this.args = undefined;
 	this.returnVal = undefined;
 	this.callbacks = [];
 	this.self = this;
 	this.fired = false;
-	length++;
 }
 __Thread.prototype = {
 
@@ -76,24 +77,43 @@ __Thread.prototype = {
 		var self = this;
 		if(!__delay){
 			return function(){
-				var args = self.args || [];
+				var args = self.args || [],
+					returnVal;
 				self.returnVal ? args.push(self.returnVal) : null;
-				args ? __fn.apply(self.self, args) : __fn.apply(self.self);
+				args ? (returnVal = __fn.apply(self.self, args)) : (returnVal = __fn.apply(self.self));
+				returnVal !== undefined ? self.returnVal = returnVal : null;
 				
-				length > 1 ? self.fireOther() : self.fire();
+				callbacks.length > 0 ? self.fireOther() : self.fire();
 			};
 		}else{
 			return function(){
 				setTimeout(function(){
-					var args = self.args || [];
+					var args = self.args || [],
+						returnVal;
 					self.returnVal ? args.push(self.returnVal) : null;
-					args ? __fn.apply(self.self, args) : __fn.apply(self.self);
+					args ? (returnVal = __fn.apply(self.self, args)) : (returnVal = __fn.apply(self.self));
+					returnVal !== undefined ? self.returnVal = returnVal : null;
 					
 					self.fire();
 				}, __delay);
 				
-				now > 1 ? self.fireOther() : tool_nullFun();
+				callbacks.length > 0 ? self.fireOther() : null;
 			}
+		}
+	},
+	
+	__package2: function(__fn){
+		var self = this;
+		return function(){
+			setImm(function(){
+				var args = self.args || [];
+				self.returnVal ? args.push(self.returnVal) : null;
+				args ? __fn.apply(self.self, args) : __fn.apply(self.self);
+					
+				self.fire();
+			});
+				
+			callbacks.length > 0 ? self.fireOther() : null;
 		}
 	},
 	
@@ -107,7 +127,6 @@ __Thread.prototype = {
 	
 	stop: function(){	
 		callbacks.push(this);
-		now++;
 		
 		return this;
 	},
@@ -122,7 +141,11 @@ __Thread.prototype = {
 	
 	define: function(){
 		if(!arguments.length) return;
-		this.args = tool_slice.call(arguments);
+		var args = tool_slice.call(arguments);
+		for(var i = args.length; i--;){
+			args[i] === undefined ? (args[i] = this.args[i]) : null;
+		}
+		this.args = args;
 		
 		return this;
 	},
@@ -133,15 +156,63 @@ __Thread.prototype = {
 		return this;
 	},
 	
+	imm: function(__fn){
+		this.callbacks.push(this.__package2(__fn));
+		
+		return this;
+	},
+	
 	wait: function(__delay){
 		return this.then(tool_nullFun, __delay);
 	},
 	
 	run: function(){
 		if(!this.fired){
+			if(arguments.length){
+				this.define(tool_slice.call(arguments));
+			}
 			this.fired = true;
 			this.fire();
 		}
+	},
+	
+	loop: function(__n){
+		var self = this,
+			ret = new __Thread();
+			ret.index = 0;
+			ret.args = [0];
+		ret.fire = function(){
+			var fn,
+				ret = this;
+		
+			if(fn = this.callbacks[this.index]){
+				this.index++;
+				fn();
+			}else{
+				if(++this.args[0] >= __n){
+					self.fire()
+				}else{
+					this.index = 0;
+					this.fire();
+				}
+			}
+	
+			return ret;
+		};
+		ret.define = function(){
+			var tmp = tool_slice.call(arguments)
+			tmp.unshift(this.args[0]);
+			this.args = tmp;
+			return this;
+		}
+		ret.loopEnd = function(){
+			var that = this;
+				
+			self.callbacks.push(function(){that.run();});
+				
+			return self;
+		};
+		return ret;
 	}
 }
 
