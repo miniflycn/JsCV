@@ -182,9 +182,13 @@ __Thread.prototype = {
 			ret.index = 0;
 			ret.args = [0];
 		ret.fire = function(){
-			var fn,
-				ret = this;
-		
+			var fn;
+			if(__n < 0){
+				(fn = this.callbacks[this.index]) ? 
+				(++this.index) && fn() : (this.index = 0) || this.fire();
+				
+				return this;
+			}	
 			if(fn = this.callbacks[this.index]){
 				this.index++;
 				fn();
@@ -197,7 +201,7 @@ __Thread.prototype = {
 				}
 			}
 	
-			return ret;
+			return this;
 		};
 		ret.define = function(){
 			var tmp = tool_slice.call(arguments)

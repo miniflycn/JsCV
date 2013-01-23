@@ -1,0 +1,74 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+<html>
+<head>
+    <title>Clock - asThread.js Sample</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=9" />    
+    <!-- 例子修改自wind.js -->
+    <script src="asThread.js"></script>
+
+    <script>
+        var drawHand = function(value, length) {
+            ctx.beginPath();
+            
+            var angle = Math.PI * 2 * value / 60;
+            var x = Math.sin(angle) * length;
+            var y = Math.cos(angle) * length;
+            
+            ctx.moveTo(100, 100);
+            ctx.lineTo(100 + x, 100 - y);
+            ctx.stroke();
+        }
+    
+        var drawClock = function() {
+			time = new Date()
+            if (!ctx) {
+                var h = time.getHours();
+                var m = time.getMinutes();
+                var s = time.getSeconds();
+                
+                var text = 
+                    ((h >= 10) ? h : "0" + h) + ":" +
+                    ((h >= 10) ? m : "0" + m) + ":" +
+                    ((h >= 10) ? s : "0" + s);
+                
+                document.getElementById("clockText").innerHTML = text;
+                return;
+            }
+        
+            ctx.clearRect(0, 0, 200, 200);
+            
+            ctx.beginPath();
+            ctx.arc(100, 100, 90, 0, Math.PI * 2, false);
+            for (var i = 0; i < 60; i += 5) {
+                var angle = Math.PI * 2 * i / 60;
+                var x = Math.sin(angle);
+                var y = Math.cos(angle);
+                ctx.moveTo(100 + x * 85, 100 - y * 85);
+                ctx.lineTo(100 + x * 90, 100 - y * 90);
+            }
+            ctx.stroke();
+            
+            drawHand(time.getSeconds(), 80);
+            drawHand(time.getMinutes() + time.getSeconds() * 1.0 / 60, 60);
+            drawHand(time.getHours() % 12 * 5 + time.getMinutes() * 1.0 / 12, 40);
+        }
+		
+		Thread().	// 使用主线程线程
+		loop(-1).	// 负数表示循环无限多次，如果是正数n，则表示n次循环
+		then(drawClock). // 循环中运行drawClock
+		wait(1000).	// 然后等待1000ms
+		loopEnd();	// 循环结束
+		// 线程定义结束
+    </script>
+</head>
+<body>
+    <canvas id="clockCanvas" height="200" width="200">
+        <div id="clockText" style="font-size:20pt;"></div>
+    </canvas>
+    <script>
+        var canvas = document.getElementById("clockCanvas");
+        var ctx = canvas.getContext ? canvas.getContext("2d") : null;
+        Thread().run();	// 运行线程
+    </script>
+</body>
+</html>
