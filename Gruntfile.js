@@ -26,7 +26,7 @@ module.exports = function(grunt) {
       for(; i < len; i++){
         data[i] = data[i].replace(/\/\*\s*\{line\}\s*\*\//g, ", " + (i + 1));
       }
-      data = data.join("\n\r");
+      data = data.join("\n");
       fs.writeFile('./dst/core.js', data, function(err){
         if(err) throw err;
         done();
