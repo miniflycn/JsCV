@@ -3,7 +3,7 @@
 	"title": "JsCV JavaScript Library",
 	"module": "core",
 	"description": "Javascript Computer Vision Library",
-	"version": "0.2pre",
+	"version": "0.2.0pre",
 	"homepaeg": "https://github.com/miniflycn/JsCV/",
 	"author": {
 		"name": "WhiteSnow",
