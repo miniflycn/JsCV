@@ -14,10 +14,31 @@ module.exports = function(grunt) {
     }
   });
 
+  // Access the logMaker
+  grunt.registerTask("logMaker", function( commit, configFile ) {
+    var fs = require("fs"),
+        done = this.async();
+    fs.readFile('./src/core.js', function(err, data){
+      if(err) throw err;
+      data = data.toString().split(/\r\n/);
+      var len = data.length,
+        i = 0;
+      for(; i < len; i++){
+        data[i] = data[i].replace(/\/\*\s*\{line\}\s*\*\//g, ", " + (i + 1));
+      }
+      data = data.join("\n\r");
+      fs.writeFile('./dst/core.js', data, function(err){
+        if(err) throw err;
+        done();
+        console.log('complete!');
+      });
+    });
+  });
+
   // Load the plugin that provides the "uglify" task.
   grunt.loadNpmTasks('grunt-contrib-uglify');
 
   // Default task(s).
-  grunt.registerTask('default', ['uglify']);
+  grunt.registerTask('default', ['logMaker', 'uglify']);
 
 };
