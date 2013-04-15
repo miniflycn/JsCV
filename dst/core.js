@@ -1,4 +1,4 @@
-/*!
+﻿/*!
  * JsCV JavaScript Library
  *
  * Core Module v0.2
